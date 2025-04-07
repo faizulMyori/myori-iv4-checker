@@ -7,6 +7,7 @@ import { FormDialog } from '@/components/FormDialog'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { set } from 'zod'
 import { Button } from '@/components/ui/button'
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function Index() {
   const [histories, setHistories] = useState({
@@ -253,30 +254,35 @@ function Form(props: any) {
       console.log(error)
     }
   }
+
   const handlePageChange = (url: string) => { }
   const handleAdd = (e: React.MouseEvent) => { }
 
   return (
-    <TableWithPagination
-      title="Serial No Lists"
-      description="view serial no lists"
-      columns={columns}
-      data={data || []}
-      pagination={{
-        currentPage: props?.current_page || 1,
-        perPage: props?.per_page || 10,
-        total: props?.total || 0,
-        from: props?.from || 0,
-        to: props?.to || 0,
-        nextUrl: props?.next_page_url || null,
-        prevUrl: props?.prev_page_url || null,
-      }}
-      actions={actions || []}
-      onSearch={handleSearch}
-      onPageChange={handlePageChange}
-      onAdd={handleAdd}
-      canAdd={false}
-      hideActions={true}
-    />
+    <ScrollArea className="h-[calc(100vh-200px)] w-full">
+      <div className="min-w-[600px]">
+        <TableWithPagination
+          title="Serial No Lists"
+          description="view serial no lists"
+          columns={columns}
+          data={data || []}
+          pagination={{
+            currentPage: props?.current_page || 1,
+            perPage: props?.per_page || 10,
+            total: props?.total || 0,
+            from: props?.from || 0,
+            to: props?.to || 0,
+            nextUrl: props?.next_page_url || null,
+            prevUrl: props?.prev_page_url || null,
+          }}
+          actions={actions || []}
+          onSearch={handleSearch}
+          onPageChange={handlePageChange}
+          onAdd={handleAdd}
+          canAdd={false}
+          hideActions={true}
+        />
+      </div>
+    </ScrollArea>
   )
 }

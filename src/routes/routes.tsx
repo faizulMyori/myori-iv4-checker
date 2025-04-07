@@ -2,7 +2,7 @@ import { createRoute } from "@tanstack/react-router";
 import { RootRoute } from "./__root";
 import HomePage from "../pages/HomePage";
 import InventoryPage from "../pages/InventoryPage";
-import ProductionPage from "@/pages/ProductionPage";
+import ProductionPage from "@/pages/production/page";
 import HistoryPage from "@/pages/HistoryPage";
 import SettingPage from "@/pages/SettingPage";
 import LicensePage from "@/pages/LicensePage";

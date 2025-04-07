@@ -6,7 +6,7 @@ i18n.use(initReactI18next).init({
   resources: {
     en: {
       translation: {
-        appName: "MyORI Label Checker (IV4)",
+        appName: "MyORI Label Checker",
         titleHomePage: "Dashboard",
         titleInventoryPage: "Products",
         titleProductionPage: "Production",
