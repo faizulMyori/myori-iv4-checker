@@ -45,7 +45,9 @@ export async function connectTcp(ip: string, port: number, event: any) {
             // Listen for incoming data
             client?.on('data', (data: Buffer) => {
                 try {
-                    const dataString = data.toString().trim();
+                    const dataString  = data.toString().trim();
+                    console.log(dataString)
+
                     if (dataString.split(',').find((d:any) => d === 'OK')) {
                         let status = dataString.split(',')[7]
                         let url = dataString.split(',')[8]
