@@ -10,14 +10,14 @@ import path from "path";
 
 const config: ForgeConfig = {
   packagerConfig: {
-    executableName: "MyORI Label Checker",
+    executableName: "MyORI Label Checker (IV4)",
     asar: true,
     icon: 'assets/icon',
   },
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({
-      setupExe: 'myori-label-checker.exe',
+      setupExe: 'myori-label-checker(iv4).exe',
       setupIcon: path.resolve(__dirname, 'assets', 'icon.ico'),
     }),
     new MakerZIP({}, ["darwin"]),

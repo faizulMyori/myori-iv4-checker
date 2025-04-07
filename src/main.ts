@@ -16,9 +16,9 @@ function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    // maximizable: false,
-    // fullscreen: true,
-    // autoHideMenuBar: true,
+    maximizable: false,
+    fullscreen: true,
+    autoHideMenuBar: true,
     webPreferences: {
       devTools: true,
       contextIsolation: true,

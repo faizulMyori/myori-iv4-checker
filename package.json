@@ -1,12 +1,12 @@
 {
-  "name": "myori-label-checker",
-  "productName": "myori-label-checker",
+  "name": "myori-label-checker-iv4",
+  "productName": "myori-label-checker-iv4",
   "version": "1.0.0",
-  "description": "myori-label-checker",
+  "description": "myori-label-checker-iv4",
   "main": ".vite/build/main.js",
   "private": true,
   "scripts": {
-    "pack:win": "npx @electron/packager . MyORI-Label-Checker --out=dist/win --platform=win32 --arch=x64 --icon=assets/icon.ico",
+    "pack:win": "npx @electron/packager . MyORI-Label-Checker-iv4 --out=dist/win --platform=win32 --arch=x64 --icon=assets/icon.ico",
     "start": "electron-forge start",
     "bikin": "npx @electron/packager . --overwrite",
     "package": "electron-forge package",
