@@ -43,22 +43,28 @@ export async function openSerialPort(port: string, event: any): Promise<string> 
         // Once the port is open, handle incoming data
         serial.on("open", () => {
             console.log(`Connected to serial port: ${port}`);
-            
-            serial.on("data", (data: any) => {
-                // console.log('Data received:', data.toString('ascii'));
 
-                // Call OCR data processing here
-                if (data.toString('ascii').includes('1')) requestOCRData(event);  // Ensure this function is defined elsewhere
-                
-                // If you need to send this data back to an Electron window:
-                // event.sender.send(TCP_RECEIVE, data.toString('ascii'));
-            });
-
-            setInterval(() => {
-                sendSerialData("@01\r")
-            }, 500);
+            pollDCON(event);
 
             resolve('Connected successfully');
+        });
+    });
+}
+
+function pollDCON(event: any) {
+    serial?.write('@01\r\n', (err: any) => {
+        console.log('running')
+
+        if (err) {
+            console.error('Error writing @01:', err.message);
+            return;
+        }
+
+        serial.once('data', (data: any) => {
+            if (data.toString('ascii').includes('1')) requestOCRData(event);
+
+            // Immediately poll again
+            pollDCON(event);
         });
     });
 }
