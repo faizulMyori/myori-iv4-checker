@@ -21,7 +21,7 @@ export default function UnusedSerials() {
         </div>
       </CardHeader>
       <CardContent className="h-[200px] overflow-y-auto">
-        {[...(unusedSerials || [])].reverse().map((item: string, index: number) => (
+        {[...(unusedSerials || [])].map((item: string, index: number) => (
           <div key={index} className="text-sm text-red-500">
             {`${item}`}
           </div>

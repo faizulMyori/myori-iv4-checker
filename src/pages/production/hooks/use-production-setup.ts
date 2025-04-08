@@ -34,6 +34,9 @@ export function useProductionSetup(labelRolls: LabelRoll[], calculateTotalLabels
   // Get today's date formatted
   const today = new Date().toISOString().split("T")[0]
 
+  // Add a new state for duplicate checking
+  const [checkDuplicates, setCheckDuplicates] = useState(true)
+
   // Load batches on mount
   useEffect(() => {
     window.sqlite.get_batchs().then((data: any) => {
@@ -69,7 +72,7 @@ export function useProductionSetup(labelRolls: LabelRoll[], calculateTotalLabels
       product: selectedProduct,
       labelRolls,
     }
-
+    setSavedProduction(productData)
     setProductData({
       id: selectedProduct,
       sku: products.find((p: any) => p.id.toString() === selectedProduct)?.sku,
@@ -79,7 +82,6 @@ export function useProductionSetup(labelRolls: LabelRoll[], calculateTotalLabels
       rating: products.find((p: any) => p.id.toString() === selectedProduct)?.rating,
       size: products.find((p: any) => p.id.toString() === selectedProduct)?.size,
     })
-    setSavedProduction(productData)
     window.sqlite
       .create_batch({
         date: today,
@@ -96,6 +98,7 @@ export function useProductionSetup(labelRolls: LabelRoll[], calculateTotalLabels
     setOpen(false)
   }
 
+  // Return the new state in the hook's return value
   return {
     open,
     setOpen,
@@ -119,6 +122,7 @@ export function useProductionSetup(labelRolls: LabelRoll[], calculateTotalLabels
     today,
     handleOpenChange,
     saveProduction,
+    checkDuplicates,
+    setCheckDuplicates,
   }
 }
-

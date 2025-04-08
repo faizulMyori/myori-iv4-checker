@@ -35,9 +35,7 @@ export function useReportDownload(
       case "captured":
         data = capturedData.filter(
           (item) =>
-            !missingData.some((dup) => dup.serial === item.serial) &&
-            !manualRejectEntries.some((dup) => dup.serialNumber === item.serial) &&
-            item.status !== "NG",
+            !manualRejectEntries.some((dup) => dup.serialNumber === item.serial)
         )
         title = "SIRIM REPORT"
         console.log(productData)

@@ -56,6 +56,8 @@ export default function ProductionPage() {
     setProductData,
     handleOpenChange,
     saveProduction,
+    checkDuplicates,
+    setCheckDuplicates,
   } = useProductionSetup(labelRolls, calculateTotalLabels)
 
   const {
@@ -193,57 +195,57 @@ export default function ProductionPage() {
       if (productionStatus !== "RUNNING") return
 
       // Handle missing serials detection
-      if (capturedData.length > 0) {
-        const lastEntry = capturedData[capturedData.length - 1]
-        const match = lastEntry.serial.match(/^([A-Za-z]+)(\d+)$/)
+      // if (capturedData.length > 0) {
+      //   const lastEntry = capturedData[capturedData.length - 1]
+      //   const match = lastEntry.serial.match(/^([A-Za-z]+)(\d+)$/)
 
-        if (match && serial) {
-          const prefix = match[1]
-          const lastSerialNum = Number.parseInt(match[2], 10)
-          const numLength = match[2].length
+      //   if (match && serial) {
+      //     const prefix = match[1]
+      //     const lastSerialNum = Number.parseInt(match[2], 10)
+      //     const numLength = match[2].length
 
-          const currentMatch = serial.match(/^([A-Za-z]+)(\d+)$/)
-          if (currentMatch) {
-            const currentSerialNum = Number.parseInt(currentMatch[2], 10)
-            if (currentSerialNum > lastSerialNum + 1) {
-              for (let i = lastSerialNum + 1; i < currentSerialNum; i++) {
-                const skippedSerial = `${prefix}${String(i).padStart(numLength, "0")}`
-                setMissingData((prevMissing) => {
-                  // Add to missing data
-                  const newMissing = [...prevMissing, { serial: skippedSerial, url: lastEntry.url, status: "MISSING" }]
-                  // Remove from unused serials
-                  removeFromUnusedSerials(skippedSerial)
-                  return newMissing
-                })
-              }
-            }
-          }
-        }
-      }
+      //     const currentMatch = serial.match(/^([A-Za-z]+)(\d+)$/)
+      //     if (currentMatch) {
+      //       const currentSerialNum = Number.parseInt(currentMatch[2], 10)
+      //       if (currentSerialNum > lastSerialNum + 1) {
+      //         for (let i = lastSerialNum + 1; i < currentSerialNum; i++) {
+      //           const skippedSerial = `${prefix}${String(i).padStart(numLength, "0")}`
+      //           setMissingData((prevMissing) => {
+      //             // Add to missing data
+      //             const newMissing = [...prevMissing, { serial: skippedSerial, url: lastEntry.url, status: "MISSING" }]
+      //             // Remove from unused serials
+      //             removeFromUnusedSerials(skippedSerial)
+      //             return newMissing
+      //           })
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
 
       // Handle case where serial or url is missing
       if (!serial || !url) {
         if (capturedData.length === 0) return
 
-        const lastEntry = capturedData[capturedData.length - 1]
-        const match = lastEntry.serial.match(/^([A-Za-z]+)(\d+)$/)
-        if (!match) return
+        // const lastEntry = capturedData[capturedData.length - 1]
+        // const match = lastEntry.serial.match(/^([A-Za-z]+)(\d+)$/)
+        // if (!match) return
 
-        const prefix = match[1]
-        const lastSerialNum = Number.parseInt(match[2], 10)
-        const numLength = match[2].length
+        // const prefix = match[1]
+        // const lastSerialNum = Number.parseInt(match[2], 10)
+        // const numLength = match[2].length
 
-        const newSerialNum = lastSerialNum + 1
-        serial = `${prefix}${String(newSerialNum).padStart(numLength, "0")}`
+        // const newSerialNum = lastSerialNum + 1
+        // serial = `${prefix}${String(newSerialNum).padStart(numLength, "0")}`
 
-        url = lastEntry.url
-        const newEntry = { serial, url, status }
+        // url = lastEntry.url
+        const newEntry = { serial: '', url: '', status }
 
         setMissingData((prevMissing) => {
           // Add to missing data
           const newMissing = [...prevMissing, newEntry]
           // Remove from unused serials
-          removeFromUnusedSerials(serial)
+          // removeFromUnusedSerials(serial)
           return newMissing
         })
         return
@@ -255,7 +257,7 @@ export default function ProductionPage() {
           // Add to missing data
           const newMissing = [...prevMissing, { serial, url, status }]
           // Remove from unused serials
-          removeFromUnusedSerials(serial)
+          // removeFromUnusedSerials(serial)
           return newMissing
         })
         return
@@ -283,9 +285,11 @@ export default function ProductionPage() {
       if (!isValidSerial) return
 
       // Check if serial is already captured (duplicate)
-      const alreadyCaptured = capturedData.some((entry) => entry.serial === serial)
+      let alreadyCaptured = false
 
-      if (alreadyCaptured) {
+      alreadyCaptured = capturedData.some((entry) => entry.serial === serial)
+
+      if (alreadyCaptured && checkDuplicates) {
         // Add to duplicated data, not captured data
         setDuplicatedData((prevDuplicates) => {
           if (!prevDuplicates.some((dup) => dup.serial === serial)) {
@@ -299,6 +303,8 @@ export default function ProductionPage() {
         })
 
         window.serial.serial_com_send("@0101\r")
+        return
+      } else if (alreadyCaptured && !checkDuplicates) {
         return
       }
 
@@ -320,7 +326,7 @@ export default function ProductionPage() {
     return () => {
       window.tcpConnection.tcp_received(undefined) // Properly remove listener
     }
-  }, [productionStatus, labelRolls, manualRejectEntries, capturedData])
+  }, [productionStatus, labelRolls, manualRejectEntries, capturedData, checkDuplicates])
 
   // Handle removing a missing data entry
   const handleRemoveMissingEntry = (serial: string) => {
@@ -358,6 +364,41 @@ export default function ProductionPage() {
 
     // Add back to unused serials only if not in captured data
     addToUnusedSerials(serial)
+  }
+
+  // Add a function to check for duplicated data across label rolls
+  const checkForDuplicatedRolls = () => {
+    const allSerials = new Set<string>()
+    const duplicates = new Set<string>()
+
+    // Check for duplicates within the label rolls
+    labelRolls.forEach(({ startNumber, endNumber }) => {
+      if (!startNumber || !endNumber) return
+
+      const startMatch = startNumber.match(/^([A-Za-z]+)(\d+)$/)
+      const endMatch = endNumber.match(/^([A-Za-z]+)(\d+)$/)
+
+      if (!startMatch || !endMatch) return
+
+      const prefix = startMatch[1]
+      const numLength = startMatch[2].length
+      const start = Number.parseInt(startMatch[2], 10)
+      const end = Number.parseInt(endMatch[2], 10)
+
+      if (isNaN(start) || isNaN(end) || start > end) return
+
+      for (let i = start; i <= end; i++) {
+        const serial = `${prefix}${String(i).padStart(numLength, "0")}`
+
+        if (allSerials.has(serial)) {
+          duplicates.add(serial)
+        } else {
+          allSerials.add(serial)
+        }
+      }
+    })
+
+    return Array.from(duplicates)
   }
 
   // Combine all context values
@@ -409,6 +450,9 @@ export default function ProductionPage() {
     unusedSerials,
     handleRemoveMissingEntry,
     handleRemoveDuplicatedEntry,
+    checkDuplicates,
+    setCheckDuplicates,
+    checkForDuplicatedRolls,
   }
 
   return (
@@ -511,4 +555,3 @@ function useManualReject() {
     handleDeleteEntry,
   }
 }
-

@@ -14,6 +14,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { useProduction } from "../context/production-context"
+import { Switch } from "@/components/ui/switch"
+import { toast } from "sonner"
 import React from "react"
 
 export default function ProductionDialog() {
@@ -40,6 +42,9 @@ export default function ProductionDialog() {
     verifyLabelRoll,
     calculateTotalLabels,
     saveProduction,
+    checkDuplicates,
+    setCheckDuplicates,
+    checkForDuplicatedRolls,
   } = useProduction()
 
   return (
@@ -187,6 +192,49 @@ export default function ProductionDialog() {
             ))}
           </div>
 
+          {/* <div className="mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const duplicates = checkForDuplicatedRolls()
+                if (duplicates.length > 0) {
+                  toast.error(`Found ${duplicates.length} duplicate serial numbers across rolls`, {
+                    description: `First few duplicates: ${duplicates.slice(0, 3).join(", ")}${duplicates.length > 3 ? "..." : ""}`,
+                    duration: 5000,
+                  })
+                } else {
+                  toast.success("No duplicate serial numbers found across rolls", {
+                    duration: 3000,
+                  })
+                }
+              }}
+              disabled={!labelRolls.some((roll: any) => roll.verified) || productionStatus === "RUNNING"}
+            >
+              Check for Duplicates Across Rolls
+            </Button>
+          </div> */}
+
+          <div className="mt-6 border-t pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="check-duplicates" className="font-semibold">
+                  Check for Duplicated Data
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  When enabled, the system will check for and flag duplicate serial numbers
+                </p>
+              </div>
+              <Switch
+                id="check-duplicates"
+                checked={checkDuplicates}
+                onCheckedChange={setCheckDuplicates}
+                disabled={productionStatus === "RUNNING"}
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-4 items-center gap-4 mt-4">
             <Label className="text-right font-semibold">Estimated Total Labels:</Label>
             <div className="col-span-3 font-bold text-lg">{calculateTotalLabels().toLocaleString()}</div>
@@ -205,4 +253,3 @@ export default function ProductionDialog() {
     </Dialog>
   )
 }
-

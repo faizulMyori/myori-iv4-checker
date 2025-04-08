@@ -47,7 +47,7 @@ export default function ManualRejectData() {
             <div key={entry.id} className="flex items-center justify-between text-sm">
               <span>{entry.serialNumber}</span>
               <Button variant="destructive" size="sm" onClick={() => handleDeleteEntry(entry.id)} className="ml-2">
-                Delete
+                Remove
               </Button>
             </div>
           ))}
