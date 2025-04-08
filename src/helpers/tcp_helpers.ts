@@ -45,10 +45,10 @@ export async function connectTcp(ip: string, port: number, event: any) {
             // Listen for incoming data
             client?.on('data', (data: Buffer) => {
                 try {
-                    const dataString  = data.toString().trim();
+                    const dataString = data.toString().trim();
                     console.log(dataString)
 
-                    if (dataString.split(',').find((d:any) => d === 'OK')) {
+                    if (dataString.split(',').find((d: any) => d === 'OK')) {
                         let status = dataString.split(',')[7]
                         let url = dataString.split(',')[8]
                         let serial = dataString.split(',')[9]
@@ -126,8 +126,8 @@ export async function setOCRDetailedOutput(event: any) {
 // Request OCR data (RT)
 export async function requestOCRData(event: any) {
     try {
-        const response:any = await sendIV4Command("RT", event);
-        
+        const response: any = await sendIV4Command("RT", event);
+
         return console.log(`OCR Data Requested: ${response}`);
     } catch (error) {
         return console.error(error);
