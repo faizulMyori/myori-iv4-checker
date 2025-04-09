@@ -191,8 +191,20 @@ export default function ProductionPage() {
       let [serial, url, status] = data.split(",").map((data: string) => data.trim())
       console.log("Received Data:", data)
 
-      if (!status) return // Ignore invalid data
       if (productionStatus !== "RUNNING") return
+
+      if (!status) {
+        const newEntry = { serial: '', url: '', status: 'UKNOWN' }
+
+        setMissingData((prevMissing) => {
+          // Add to missing data
+          const newMissing = [...prevMissing, newEntry]
+          // Remove from unused serials
+          // removeFromUnusedSerials(serial)
+          return newMissing
+        })
+        return
+      }
 
       // Handle missing serials detection
       // if (capturedData.length > 0) {
@@ -225,7 +237,7 @@ export default function ProductionPage() {
 
       // Handle case where serial or url is missing
       if (!serial || !url) {
-        if (capturedData.length === 0) return
+        // if (capturedData.length === 0) return
 
         // const lastEntry = capturedData[capturedData.length - 1]
         // const match = lastEntry.serial.match(/^([A-Za-z]+)(\d+)$/)
@@ -282,7 +294,18 @@ export default function ProductionPage() {
         return serial.startsWith(startPrefix) && serialNum >= start && serialNum <= end
       })
 
-      if (!isValidSerial) return
+      if (!isValidSerial) {
+        const newEntry = { serial, url, status: status + ' - INVALID' }
+
+        setMissingData((prevMissing) => {
+          // Add to missing data
+          const newMissing = [...prevMissing, newEntry]
+          // Remove from unused serials
+          // removeFromUnusedSerials(serial)
+          return newMissing
+        })
+        return
+      }
 
       // Check if serial is already captured (duplicate)
       let alreadyCaptured = false
