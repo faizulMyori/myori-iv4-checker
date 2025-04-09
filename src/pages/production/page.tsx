@@ -194,88 +194,23 @@ export default function ProductionPage() {
       if (productionStatus !== "RUNNING") return
 
       if (!status) {
-        const newEntry = { serial: "", url: "", status: "(UKNOWN)" }
-
-        setMissingData((prevMissing) => {
-          // Add to missing data
-          const newMissing = [...prevMissing, newEntry]
-          // Remove from unused serials
-          // removeFromUnusedSerials(serial)
-          return newMissing
-        })
+        setMissingData((prevMissing) => [...prevMissing, { serial, url: "", status: "(UNKNOWN)" }])
         return
       }
-
-      // Handle missing serials detection
-      // if (capturedData.length > 0) {
-      //   const lastEntry = capturedData[capturedData.length - 1]
-      //   const match = lastEntry.serial.match(/^([A-Za-z]+)(\d+)$/)
-
-      //   if (match && serial) {
-      //     const prefix = match[1]
-      //     const lastSerialNum = Number.parseInt(match[2], 10)
-      //     const numLength = match[2].length
-
-      //     const currentMatch = serial.match(/^([A-Za-z]+)(\d+)$/)
-      //     if (currentMatch) {
-      //       const currentSerialNum = Number.parseInt(currentMatch[2], 10)
-      //       if (currentSerialNum > lastSerialNum + 1) {
-      //         for (let i = lastSerialNum + 1; i < currentSerialNum; i++) {
-      //           const skippedSerial = `${prefix}${String(i).padStart(numLength, "0")}`
-      //           setMissingData((prevMissing) => {
-      //             // Add to missing data
-      //             const newMissing = [...prevMissing, { serial: skippedSerial, url: lastEntry.url, status: "MISSING" }]
-      //             // Remove from unused serials
-      //             removeFromUnusedSerials(skippedSerial)
-      //             return newMissing
-      //           })
-      //         }
-      //       }
-      //     }
-      //   }
-      // }
 
       // Handle case where serial or url is missing
       if (!serial || !url) {
-        // if (capturedData.length === 0) return
-
-        // const lastEntry = capturedData[capturedData.length - 1]
-        // const match = lastEntry.serial.match(/^([A-Za-z]+)(\d+)$/)
-        // if (!match) return
-
-        // const prefix = match[1]
-        // const lastSerialNum = Number.parseInt(match[2], 10)
-        // const numLength = match[2].length
-
-        // const newSerialNum = lastSerialNum + 1
-        // serial = `${prefix}${String(newSerialNum).padStart(numLength, "0")}`
-
-        // url = lastEntry.url
-        const newEntry = { serial: "", url: "", status }
-
-        setMissingData((prevMissing) => {
-          // Add to missing data
-          const newMissing = [...prevMissing, newEntry]
-          // Remove from unused serials
-          // removeFromUnusedSerials(serial)
-          return newMissing
-        })
-        return
+        setMissingData((prev) => [...prev, { serial: "", url: "", status }]);
+        return;
       }
 
-      // Handle NG status - add to missing data, not captured data
       if (status === "NG") {
-        setMissingData((prevMissing) => {
-          // Add to missing data
-          const newMissing = [...prevMissing, { serial, url, status }]
-          // Remove from unused serials
-          // removeFromUnusedSerials(serial)
-          return newMissing
-        })
-        return
+        setMissingData(prevMissing => [...prevMissing, { serial, url, status }]);
+        return;
       }
 
       // Validate serial number
+      const serialPrefix = serial.replace(/\d/g, "")
       const serialNum = Number.parseInt(serial.replace(/\D/g, ""), 10)
       const isValidSerial = labelRolls.some(({ startNumber, endNumber }: any) => {
         if (!startNumber || !endNumber) return false
@@ -286,22 +221,19 @@ export default function ProductionPage() {
 
         const startPrefix = startMatch[1]
         const endPrefix = endMatch[1]
-        if (startPrefix !== endPrefix) return false
+        if (startPrefix !== endPrefix || startPrefix !== serialPrefix) return false
 
         const start = Number.parseInt(startMatch[2], 10)
         const end = Number.parseInt(endMatch[2], 10)
 
-        return serial.startsWith(startPrefix) && serialNum >= start && serialNum <= end
+        return serialNum >= start && serialNum <= end
       })
 
       if (!isValidSerial) {
         const newEntry = { serial, url, status: status + " - (INVALID)" }
 
         setMissingData((prevMissing) => {
-          // Add to missing data
           const newMissing = [...prevMissing, newEntry]
-          // Remove from unused serials
-          // removeFromUnusedSerials(serial)
           return newMissing
         })
         return
@@ -318,8 +250,8 @@ export default function ProductionPage() {
           if (!prevDuplicates.some((dup) => dup.serial === serial)) {
             // Add to duplicated data
             const newDuplicates = [...prevDuplicates, { serial, url, status }]
-            // Remove from unused serials
-            removeFromUnusedSerials(serial)
+            // // Remove from unused serials
+            // removeFromUnusedSerials(serial)
             return newDuplicates
           }
           return prevDuplicates
@@ -332,9 +264,9 @@ export default function ProductionPage() {
       }
 
       // Check if in manual reject entries
-      if (manualRejectEntries.some((entry) => entry.serialNumber === serial)) {
-        return
-      }
+      // if (manualRejectEntries.some((entry) => entry.serialNumber === serial)) {
+      //   return
+      // }
 
       // Only add to captured data if status is OK and not a duplicate
       if (status === "OK" && !alreadyCaptured) {

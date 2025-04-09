@@ -131,7 +131,7 @@ export default function CapturedData() {
   }
 
   return (
-    <Card className="col-span-6" onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}>
+    <Card className="col-span-6">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">READING CAPTURED DATA</CardTitle>
         <div className="flex items-center gap-2">
@@ -147,6 +147,7 @@ export default function CapturedData() {
                   size="sm"
                   onClick={() => setIsModalOpen(true)}
                   className={`transition-opacity duration-300 ${isHovering ? "opacity-100" : "opacity-0"}`}
+                  onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}
                 >
                   <FileSpreadsheet className="h-4 w-4" />
                 </Button>
