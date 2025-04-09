@@ -7,9 +7,7 @@ export default function Footer() {
   return (
     <footer className="font-tomorrow inline-flex justify-between text-[0.7rem] uppercase text-muted-foreground">
       <p>Powered by MyORI SmartSecure</p>
-      {
-        user && <p>Welcome, <span className="font-bold">{user?.username}</span></p>
-      }
+      <p>Version: <span className="font-bold">1.0.4</span> | Date: <span className="font-bold">9/8/2023</span></p>
     </footer>
   );
 }

@@ -118,7 +118,7 @@ export default function ProductionPage() {
 
   // Generate all possible serials from label rolls
   const generateAllSerials = () => {
-    return labelRolls.flatMap(({ startNumber, endNumber }) => {
+    return labelRolls.flatMap(({ startNumber, endNumber }: any) => {
       if (!startNumber || !endNumber) return []
 
       const startMatch = startNumber.match(/^([A-Za-z]+)(\d+)$/)
@@ -139,7 +139,7 @@ export default function ProductionPage() {
 
   // Initialize unused serials when label rolls change
   useEffect(() => {
-    if (labelRolls.some((roll) => roll.verified)) {
+    if (labelRolls.some((roll: any) => roll.verified)) {
       const allSerials = generateAllSerials()
       setUnusedSerials(allSerials)
       console.log("Initialized unused serials:", allSerials.length)
@@ -188,13 +188,13 @@ export default function ProductionPage() {
     }
 
     const handleTcpData = (data: any) => {
-      let [serial, url, status] = data.split(",").map((data: string) => data.trim())
+      const [serial, url, status] = data.split(",").map((data: string) => data.trim())
       console.log("Received Data:", data)
 
       if (productionStatus !== "RUNNING") return
 
       if (!status) {
-        const newEntry = { serial: '', url: '', status: 'UKNOWN' }
+        const newEntry = { serial: "", url: "", status: "(UKNOWN)" }
 
         setMissingData((prevMissing) => {
           // Add to missing data
@@ -251,7 +251,7 @@ export default function ProductionPage() {
         // serial = `${prefix}${String(newSerialNum).padStart(numLength, "0")}`
 
         // url = lastEntry.url
-        const newEntry = { serial: '', url: '', status }
+        const newEntry = { serial: "", url: "", status }
 
         setMissingData((prevMissing) => {
           // Add to missing data
@@ -277,7 +277,7 @@ export default function ProductionPage() {
 
       // Validate serial number
       const serialNum = Number.parseInt(serial.replace(/\D/g, ""), 10)
-      const isValidSerial = labelRolls.some(({ startNumber, endNumber }) => {
+      const isValidSerial = labelRolls.some(({ startNumber, endNumber }: any) => {
         if (!startNumber || !endNumber) return false
 
         const startMatch = startNumber.match(/^([A-Za-z]+)(\d+)$/)
@@ -295,7 +295,7 @@ export default function ProductionPage() {
       })
 
       if (!isValidSerial) {
-        const newEntry = { serial, url, status: status + ' - INVALID' }
+        const newEntry = { serial, url, status: status + " - (INVALID)" }
 
         setMissingData((prevMissing) => {
           // Add to missing data
@@ -395,7 +395,7 @@ export default function ProductionPage() {
     const duplicates = new Set<string>()
 
     // Check for duplicates within the label rolls
-    labelRolls.forEach(({ startNumber, endNumber }) => {
+    labelRolls.forEach(({ startNumber, endNumber }: any) => {
       if (!startNumber || !endNumber) return
 
       const startMatch = startNumber.match(/^([A-Za-z]+)(\d+)$/)
