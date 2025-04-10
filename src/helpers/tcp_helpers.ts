@@ -49,7 +49,7 @@ export async function connectTcp(ip: string, port: number, event: any) {
                 try {
                     const dataString = data.toString().trim();
 
-                    if (dataString.includes('PING')) return;
+                    if (dataString.includes('ER') || dataString.includes('PING')) return;
                     console.log(`Received: ${dataString}`);
 
                     if (dataString.split(',').find((d: any) => d === 'OK')) {
