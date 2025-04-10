@@ -8,23 +8,14 @@ import { toast } from "sonner"
 import React from "react"
 
 export default function MissingData() {
-  const { missingData, handleDownload, handleRemoveMissingEntry, capturedData } = useProduction()
+  const { missingData, handleDownload, handleRemoveMissingEntry } = useProduction()
 
-  const handleRemove = (serial: string) => {
-    handleRemoveMissingEntry(serial)
+  const handleRemove = (index: number, serial: string) => {
+    handleRemoveMissingEntry(index)
 
-    // Check if the serial is in captured data
-    const isInCapturedData = capturedData.some((item: any) => item.serial === serial)
-
-    if (isInCapturedData) {
-      toast.success("Serial number removed", {
-        description: `${serial} has been removed from missing data.`,
-      })
-    } else {
-      toast.success("Serial number returned", {
-        description: `${serial} has been removed from missing data and returned to unused serials.`,
-      })
-    }
+    toast.success("Serial number removed", {
+      description: `${serial} has been removed from missing data.`,
+    })
   }
 
   return (
@@ -49,7 +40,7 @@ export default function MissingData() {
               variant="destructive"
               size="sm"
               className="h-7 px-2 ml-2"
-              onClick={() => handleRemove(item.serial)}
+              onClick={() => handleRemove(index, item.serial)}
               title="Remove from missing data"
             >
               <Trash2 className="h-4 w-4 mr-1" />

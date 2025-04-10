@@ -284,22 +284,10 @@ export default function ProductionPage() {
   }, [productionStatus, labelRolls, manualRejectEntries, capturedData, checkDuplicates])
 
   // Handle removing a missing data entry
-  const handleRemoveMissingEntry = (serial: string) => {
+  const handleRemoveMissingEntry = (i: Number) => {
     setMissingData((prevData) => {
-      console.log(`Removing ${serial} from missing data`)
-      return prevData.filter((item) => item.serial !== serial)
+      return prevData.reverse().filter((item, index) => index !== i).reverse()
     })
-
-    // Check if the serial is in captured data before adding back to unused serials
-    const isInCapturedData = capturedData.some((item) => item.serial === serial)
-
-    if (isInCapturedData) {
-      console.log(`Serial ${serial} is in captured data, not adding to unused serials`)
-      return
-    }
-
-    // Add back to unused serials only if not in captured data
-    addToUnusedSerials(serial)
   }
 
   // Handle removing a duplicated data entry

@@ -3,7 +3,7 @@ import { RootRoute } from "./__root";
 import HomePage from "../pages/HomePage";
 import InventoryPage from "../pages/InventoryPage";
 import ProductionPage from "@/pages/production/page";
-import HistoryPage from "@/pages/HistoryPage";
+import HistoryPage from "@/pages/history/page";
 import SettingPage from "@/pages/SettingPage";
 import LicensePage from "@/pages/LicensePage";
 

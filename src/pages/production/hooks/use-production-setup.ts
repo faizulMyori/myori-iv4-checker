@@ -35,7 +35,7 @@ export function useProductionSetup(labelRolls: LabelRoll[], calculateTotalLabels
   const today = new Date().toISOString().split("T")[0]
 
   // Add a new state for duplicate checking
-  const [checkDuplicates, setCheckDuplicates] = useState(true)
+  const [checkDuplicates, setCheckDuplicates] = useState(false)
 
   // Load batches on mount
   useEffect(() => {
