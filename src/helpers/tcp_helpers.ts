@@ -42,11 +42,15 @@ export async function connectTcp(ip: string, port: number, event: any) {
             event.sender.send(TCP_CONNECTED);
             client?.removeAllListeners(); // Remove all previous listeners
             setOCRDetailedOutput(event);
+            setInterval(keepAlive, 10000); // Send keep-alive packets every 30 seconds
+
             // Listen for incoming data
             client?.on('data', (data: Buffer) => {
                 try {
                     const dataString = data.toString().trim();
-                    console.log(dataString)
+
+                    if (dataString.includes('PING')) return;
+                    console.log(`Received: ${dataString}`);
 
                     if (dataString.split(',').find((d: any) => d === 'OK')) {
                         let status = dataString.split(',')[7]
@@ -92,6 +96,12 @@ export async function connectTcp(ip: string, port: number, event: any) {
             attemptReconnect(ip, port, event);
         });
     });
+}
+
+function keepAlive() {
+    if (client && !client.destroyed) {
+        client.write('PING\r\n');
+    }
 }
 
 // Send commands to IV4
