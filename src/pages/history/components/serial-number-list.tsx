@@ -1,7 +1,7 @@
 "use client"
 import TableWithPagination from "@/components/TableWithPagination"
 import { Button } from "@/components/ui/button"
-import React from "react"
+import React, { useCallback } from "react"
 
 interface BatchHistoryTableProps {
     data: any[]
@@ -28,6 +28,14 @@ export default function BatchHistoryTable({
     onViewSerialNumbers,
     onDeleteBatch,
 }: BatchHistoryTableProps) {
+    const handleViewSerialNumbers = useCallback((item: any) => {
+        onViewSerialNumbers(item)
+    }, [onViewSerialNumbers])
+
+    const handleDeleteBatch = useCallback((item: any) => {
+        onDeleteBatch(item)
+    }, [onDeleteBatch])
+
     const columns = [
         {
             key: "batch_no",
@@ -46,7 +54,10 @@ export default function BatchHistoryTable({
             label: "Serial No.",
             hidden: false,
             render: (item: any) => (
-                <Button size={"sm"} onClick={() => onViewSerialNumbers(item)}>
+                <Button
+                    size="sm"
+                    onClick={() => handleViewSerialNumbers(item)}
+                >
                     Open List
                 </Button>
             ),
@@ -68,7 +79,7 @@ export default function BatchHistoryTable({
     const actions = [
         {
             label: "Delete",
-            onClick: (item: any) => onDeleteBatch(item),
+            onClick: handleDeleteBatch,
         },
     ]
 

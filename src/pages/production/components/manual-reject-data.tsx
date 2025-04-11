@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -29,6 +30,21 @@ export default function ManualRejectData() {
     handleDeleteEntry,
     handleDownload,
   } = useProduction()
+  const [deleteEntryId, setDeleteEntryId] = React.useState<string | null>(null)
+  const [deleteEntrySerial, setDeleteEntrySerial] = React.useState<string | null>(null)
+
+  const handleDelete = (id: string, serialNumber: string) => {
+    setDeleteEntryId(id)
+    setDeleteEntrySerial(serialNumber)
+  }
+
+  const confirmDelete = () => {
+    if (deleteEntryId) {
+      handleDeleteEntry(deleteEntryId)
+      setDeleteEntryId(null)
+      setDeleteEntrySerial(null)
+    }
+  }
 
   return (
     <Card className="col-span-4">
@@ -46,7 +62,7 @@ export default function ManualRejectData() {
           {[...manualRejectEntries].reverse().map((entry: any) => (
             <div key={entry.id} className="flex items-center justify-between text-sm">
               <span>{entry.serialNumber}</span>
-              <Button variant="destructive" size="sm" onClick={() => handleDeleteEntry(entry.id)} className="ml-2">
+              <Button variant="destructive" size="sm" onClick={() => handleDelete(entry.id, entry.serialNumber)} className="ml-2">
                 Remove
               </Button>
             </div>
@@ -95,6 +111,25 @@ export default function ManualRejectData() {
                 Add Entries
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={deleteEntryId !== null} onOpenChange={() => setDeleteEntryId(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Removal</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to remove {deleteEntrySerial} from manual reject data?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteEntryId(null)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmDelete}>
+                Remove
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </CardContent>

@@ -1,22 +1,22 @@
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
 import React from "react";
 import { useEffect, useState } from "react";
 
-export function ConfirmDialog(props:any) {
+export function ConfirmDialog(props: any) {
     const [open, setOpen] = useState(props.open);
 
     useEffect(() => {
         props.setOpen(open)
     }, [open])
 
-    function handleSubmit(event:any) {
+    function handleSubmit(event: any) {
         event.preventDefault();
         props.setConfirm(true)
     }
@@ -27,9 +27,9 @@ export function ConfirmDialog(props:any) {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent 
+            <DialogContent
                 className="sm:max-w-[425px]"
-                onInteractOutside={(e:any) => {
+                onInteractOutside={(e: any) => {
                     e.preventDefault();
                 }}
             >
@@ -44,5 +44,5 @@ export function ConfirmDialog(props:any) {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
-  )
+    )
 }

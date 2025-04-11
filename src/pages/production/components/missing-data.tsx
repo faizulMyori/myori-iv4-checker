@@ -6,16 +6,34 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useProduction } from "../context/production-context"
 import { toast } from "sonner"
 import React from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export default function MissingData() {
   const { missingData, handleDownload, handleRemoveMissingEntry } = useProduction()
+  const [deleteIndex, setDeleteIndex] = React.useState<number | null>(null)
+  const [deleteSerial, setDeleteSerial] = React.useState<string | null>(null)
 
   const handleRemove = (index: number, serial: string) => {
-    handleRemoveMissingEntry(index)
+    setDeleteIndex(index)
+    setDeleteSerial(serial)
+  }
 
-    toast.success("Serial number removed", {
-      description: `${serial} has been removed from missing data.`,
-    })
+  const confirmDelete = () => {
+    if (deleteIndex !== null) {
+      handleRemoveMissingEntry(deleteIndex)
+      toast.success("Serial number removed", {
+        description: `${deleteSerial} has been removed from missing data.`,
+      })
+      setDeleteIndex(null)
+      setDeleteSerial(null)
+    }
   }
 
   return (
@@ -52,6 +70,25 @@ export default function MissingData() {
           <div className="text-center text-muted-foreground py-8">No missing serial numbers</div>
         )}
       </CardContent>
+
+      <Dialog open={deleteIndex !== null} onOpenChange={() => setDeleteIndex(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Removal</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove {deleteSerial} from missing data?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteIndex(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

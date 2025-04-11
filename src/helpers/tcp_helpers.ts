@@ -12,6 +12,11 @@ let client: net.Socket | null = null;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = 5000; // 5 seconds
+let autoReconnectEnabled = true;
+
+export function setAutoReconnect(enabled: boolean) {
+    autoReconnectEnabled = enabled;
+}
 
 export async function connectTcp(ip: string, port: number, event: any) {
     console.log(`Attempting to connect to ${ip}:${port}`);
@@ -41,15 +46,13 @@ export async function connectTcp(ip: string, port: number, event: any) {
             reconnectAttempts = 0; // Reset reconnect attempts on success
             event.sender.send(TCP_CONNECTED);
             client?.removeAllListeners(); // Remove all previous listeners
-            setOCRDetailedOutput(event);
             setInterval(keepAlive, 10000); // Send keep-alive packets every 30 seconds
-
             // Listen for incoming data
             client?.on('data', (data: Buffer) => {
                 try {
                     const dataString = data.toString().trim();
 
-                    if (dataString.includes('ER') || dataString.includes('PING')) return;
+                    if (dataString.startsWith('ER,') || dataString.startsWith('PING')) return;
                     console.log(`Received: ${dataString}`);
 
                     if (dataString.split(',').find((d: any) => d === 'OK')) {
@@ -72,10 +75,12 @@ export async function connectTcp(ip: string, port: number, event: any) {
                 console.log('TCP connection closed');
                 event.sender.send(TCP_CLOSED);
                 client = null; // Reset client for reconnection
-                attemptReconnect(ip, port, event);
+                if (autoReconnectEnabled) {
+                    attemptReconnect(ip, port, event);
+                }
                 ipcMain.emit(WIN_DIALOG_INFO, {
                     title: "Error",
-                    message: `Connection Closed! Reconnecting....`,
+                    message: `Connection Closed!${autoReconnectEnabled ? ' Reconnecting....' : ''}`,
                 });
             });
 
@@ -84,7 +89,9 @@ export async function connectTcp(ip: string, port: number, event: any) {
                 console.error(`TCP Connection Error: ${err.message}`);
                 event.sender.send(TCP_ERROR, err.message);
                 client = null; // Reset client for reconnection
-                attemptReconnect(ip, port, event);
+                if (autoReconnectEnabled) {
+                    attemptReconnect(ip, port, event);
+                }
             });
         });
 
@@ -93,7 +100,9 @@ export async function connectTcp(ip: string, port: number, event: any) {
             console.error(`TCP Connection Error: ${err.message}`);
             event.sender.send(TCP_ERROR, err.message);
             client = null; // Reset client for reconnection
-            attemptReconnect(ip, port, event);
+            if (autoReconnectEnabled) {
+                attemptReconnect(ip, port, event);
+            }
         });
     });
 }
@@ -102,6 +111,75 @@ function keepAlive() {
     if (client && !client.destroyed) {
         client.write('PING\r\n');
     }
+}
+
+// Attempt to reconnect with a delay
+function attemptReconnect(ip: string, port: number, event: any) {
+    // if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+    //     console.error("Max reconnect attempts reached. Stopping reconnect attempts.");
+    //     return;
+    // }
+
+    // reconnectAttempts++;
+    console.log(`Reconnecting in ${RECONNECT_DELAY / 1000} seconds...`);
+
+    setTimeout(() => {
+        connectTcp(ip, port, event)
+            .then(() => console.log('Reconnected successfully'))
+            .catch((err) => console.error(`Reconnect failed: ${err}`));
+    }, RECONNECT_DELAY);
+}
+
+export function closeTcpConnection() {
+    return new Promise((resolve, reject) => {
+        if (client && !client.destroyed) {
+            client.end(() => {
+                client?.destroy();
+                client = null;
+                resolve('Connection closed successfully');
+            });
+        } else {
+            reject('No active connection to close');
+        }
+    });
+}
+
+export function sendData(cmd: string) {
+    //0 = RESET
+    //1 = DO0
+    //2 = DO1
+    //3 = DO0 & DO1
+    //4 = DO2
+    //5 = DO0 & DO2
+    //6 = DO1 & DO2
+    //7 = DO0 & DO1 & DO2
+    //8 = DO3
+    //9 = DO0 & DO3
+    //10 = DO4
+    console.log(cmd)
+    sendDconCommand(cmd)
+        .then((response) => {
+            // if (cmd !== '@0100\r') sendData('@0100\r')
+            console.log('Response:', response);
+        })
+        .catch((err) => {
+            console.error('Error:', err);
+        });
+}
+
+function sendDconCommand(command: string) {
+    return new Promise((resolve, reject) => {
+        // write to dcon rs485
+
+        client?.write(command, 'ascii', (err: any) => {
+            if (err) {
+                return reject(err);
+            }
+            client?.on('data', (data: any) => {
+                resolve(data.toString('ascii')); // Convert response buffer to ASCII string
+            });
+        });
+    });
 }
 
 // Send commands to IV4
@@ -142,29 +220,4 @@ export async function requestOCRData(event: any) {
     } catch (error) {
         return console.error(error);
     }
-}
-
-// Attempt to reconnect with a delay
-function attemptReconnect(ip: string, port: number, event: any) {
-    console.log(`Reconnecting in ${RECONNECT_DELAY / 1000} seconds...`);
-
-    setTimeout(() => {
-        connectTcp(ip, port, event)
-            .then(() => console.log('Reconnected successfully'))
-            .catch((err) => console.error(`Reconnect failed: ${err}`));
-    }, RECONNECT_DELAY);
-}
-
-export function closeTcpConnection() {
-    return new Promise((resolve, reject) => {
-        if (client && !client.destroyed) {
-            client.end(() => {
-                client?.destroy();
-                client = null;
-                resolve('Connection closed successfully');
-            });
-        } else {
-            reject('No active connection to close');
-        }
-    });
 }

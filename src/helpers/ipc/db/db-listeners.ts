@@ -221,8 +221,10 @@ export function addDBEventListeners() {
 
   ipcMain.handle(DB_DELETE_BATCH, async (event, data) => {
     try {
-      return await executeQuery("DELETE FROM batches WHERE id = ?", [data]);
+      await executeQuery("DELETE FROM batches WHERE id = ?", [data]);
+      return true;
     } catch (error) {
+      console.error("Error deleting batch:", error);
       return false;
     }
   });
@@ -282,8 +284,13 @@ export function addDBEventListeners() {
 
   ipcMain.handle(DB_DELETE_LABEL, async (event, data) => {
     try {
-      return await executeQuery("DELETE FROM labels WHERE id = ?", [data]);
+      // Check if data is a number (ID) or string (serial)
+      const isId = typeof data === 'number';
+      const query = isId ? "DELETE FROM labels WHERE id = ?" : "DELETE FROM labels WHERE serial = ?";
+      const result = await executeQuery(query, [data]);
+      return result;
     } catch (error) {
+      console.error("Error deleting label:", error);
       return false;
     }
   });
@@ -324,6 +331,16 @@ export function addDBEventListeners() {
       return data
     } catch (error) {
       return error;
+    }
+  });
+
+  // Add new handler for raw SQL queries
+  ipcMain.handle('db:fetchAll', async (event, { query, params = [] }) => {
+    try {
+      return await fetchAll(query, params);
+    } catch (error) {
+      console.error('Error executing raw query:', error);
+      return false;
     }
   });
 }

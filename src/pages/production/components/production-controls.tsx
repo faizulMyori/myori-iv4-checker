@@ -14,6 +14,7 @@ export default function ProductionControls() {
     resumeProduction,
     stopProduction,
     handleDownload,
+    resetProduction,
   } = useProduction()
 
   return (
@@ -58,15 +59,23 @@ export default function ProductionControls() {
         >
           Download Reports
         </Button>
+        <Button
+          size="lg"
+          className="bg-red-700 hover:bg-red-600"
+          disabled={productionStatus === "RUNNING" || productionStatus === "HOLD"}
+          onClick={resetProduction}
+        >
+          Reset Production
+        </Button>
       </div>
       <div
         className={`text-lg font-semibold ${productionStatus === "RUNNING"
-            ? "text-green-500"
-            : productionStatus === "STOPPED"
-              ? "text-red-500"
-              : productionStatus === "HOLD"
-                ? "text-amber-500"
-                : "text-gray-500"
+          ? "text-green-500"
+          : productionStatus === "STOPPED"
+            ? "text-red-500"
+            : productionStatus === "HOLD"
+              ? "text-amber-500"
+              : "text-gray-500"
           }`}
       >
         Status: {productionStatus}

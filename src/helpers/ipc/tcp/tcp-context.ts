@@ -6,7 +6,7 @@ import {
   TCP_RECEIVE,
   TCP_SEND,
   TCP_CONNECTED,
-  TCP_START_RECEIVE
+  TCP_SET_AUTO_RECONNECT
 } from "./tcp-channels";
 
 export function exposeTCPContext() {
@@ -34,9 +34,6 @@ export function exposeTCPContext() {
 
     tcp_send: (data: any) => ipcRenderer.invoke(TCP_SEND, data),
 
-    tcp_start_receive:(data:boolean) => {
-      ipcRenderer.removeAllListeners(TCP_START_RECEIVE);
-      ipcRenderer.invoke(TCP_START_RECEIVE, data)
-    },
+    set_auto_reconnect: (enabled: boolean) => ipcRenderer.invoke(TCP_SET_AUTO_RECONNECT, enabled),
   });
 }

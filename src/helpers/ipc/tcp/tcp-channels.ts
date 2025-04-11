@@ -5,4 +5,4 @@ export const TCP_ERROR = "tcp:error";
 export const TCP_CLOSED = "tcp:closed";
 export const TCP_SEND = "tcp:send";
 export const TCP_CONNECTED = "tcp:connected";
-export const TCP_START_RECEIVE = "tcp:start_receive";
+export const TCP_SET_AUTO_RECONNECT = "tcp:set_auto_reconnect";

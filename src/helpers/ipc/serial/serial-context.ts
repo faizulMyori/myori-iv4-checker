@@ -12,10 +12,7 @@ export function exposeSERIALContext() {
   const { contextBridge, ipcRenderer } = window.require("electron");
   contextBridge.exposeInMainWorld("serial", {
     serial_com_open: (connectionDetails: any) => ipcRenderer.invoke(SERIAL_CONNECT, connectionDetails),
-    serial_received: (callback: any) => {
-      ipcRenderer.removeAllListeners(SERIAL_RECEIVE); // Remove existing listener
-      ipcRenderer.on(SERIAL_RECEIVE, (_: any, data: any) => callback(data))
-    },
+    serial_received: (callback: any) => ipcRenderer.on(SERIAL_RECEIVE, (_: any, data: any) => callback(data)),
     serial_com_close: (callback: any) => ipcRenderer.on(SERIAL_CLOSED, callback),
     serial_com_disconnect: () => ipcRenderer.invoke(SERIAL_DISCONNECT),
     serial_com_send: (data: any) => ipcRenderer.invoke(SERIAL_SEND, data),

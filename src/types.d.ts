@@ -4,6 +4,33 @@
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
 declare const MAIN_WINDOW_VITE_NAME: string;
 
+interface Label {
+  id: number;
+  serial: string;
+  qr_code: string;
+  status: string;
+  batch_id: number;
+  timestamp: number;
+}
+
+interface Product {
+  id: number;
+  sku: string;
+  brand: string;
+  model: string;
+  type: string;
+  rating: string;
+  size: string;
+}
+
+interface Batch {
+  id: number;
+  batch_no: string;
+  shift_number: string;
+  product_id: number;
+  date: string;
+}
+
 // Preload types
 interface ThemeModeContext {
   toggle: () => Promise<boolean>;
@@ -23,47 +50,50 @@ interface sqlite {
   db_login: (username: any, password: any) => Promise<void>;
 
   create_product: (data: any) => Promise<void>;
-  get_products: () => Promise<void>;
-  search_products: (query: string) => Promise<void>;
+  get_products: () => Promise<Product[]>;
+  search_products: (query: string) => Promise<Product[]>;
   update_product: (data: any) => Promise<void>;
   delete_product: (id: any) => Promise<void>;
 
   create_license: (data: any) => Promise<void>;
-  get_licenses: () => Promise<void>;
-  search_licenses: (query: string) => Promise<void>;
+  get_licenses: () => Promise<any[]>;
+  search_licenses: (query: string) => Promise<any[]>;
   update_license: (data: any) => Promise<void>;
   delete_license: (id: any) => Promise<void>;
 
   create_user: (data: any) => Promise<void>;
-  get_users: () => Promise<void>;
-  search_users: (query: string) => Promise<void>;
+  get_users: () => Promise<any[]>;
+  search_users: (query: string) => Promise<any[]>;
   update_user: (data: any) => Promise<void>;
   delete_user: (id: any) => Promise<void>;
 
-  create_batch: (data: any) => Promise<void>;
-  get_batchs: () => Promise<void>;
-  search_batchs: (query: string) => Promise<void>;
+  create_batch: (data: any) => Promise<Batch>;
+  get_batchs: () => Promise<Batch[]>;
+  search_batchs: (query: string) => Promise<Batch[]>;
   update_batch: (data: any) => Promise<void>;
-  delete_batch: (id: any) => Promise<void>;
+  delete_batch: (id: number) => Promise<{ success: boolean; message?: string }>;
 
   create_label: (data: any) => Promise<void>;
-  get_labels: () => Promise<void>;
-  search_labels: (query: string) => Promise<void>;
+  get_labels: () => Promise<Label[]>;
+  search_labels: (query: string) => Promise<Label[]>;
   update_label: (data: any) => Promise<void>;
   delete_label: (id: any) => Promise<void>;
-  check_serial_numbers: (data: any) => Promise<void>;
+  check_serial_numbers: (data: any) => Promise<Label[]>;
 
   create_history: (data: any) => Promise<void>;
-  get_histories: () => Promise<void>;
-  search_histories: (query: string) => Promise<void>;
+  get_histories: () => Promise<any[]>;
+  search_histories: (query: string) => Promise<any[]>;
   update_history: (data: any) => Promise<void>;
   delete_history: (id: any) => Promise<void>;
 
   create_storage_treshold: (value: any) => Promise<void>;
-  get_storage_treshold: () => Promise<void>;
+  get_storage_treshold: () => Promise<any>;
 
   create_connection: (ip: any, port: any, com: any) => Promise<void>;
-  get_connections: () => Promise<void>;
+  get_connections: () => Promise<any[]>;
+
+  // Add new function for raw SQL queries
+  fetchAll: (query: string, params?: any[]) => Promise<any[]>;
 }
 
 interface tcpConnection {
@@ -73,7 +103,7 @@ interface tcpConnection {
   tcp_connected: (callback: any) => Promise<void>;
   tcp_received: (callback: any) => Promise<void>;
   tcp_send: (data: any) => Promise<void>;
-  tcp_start_receive:(data: boolean) => Promise<void>;
+  set_auto_reconnect: (enabled: boolean) => Promise<void>;
 }
 
 interface excel {

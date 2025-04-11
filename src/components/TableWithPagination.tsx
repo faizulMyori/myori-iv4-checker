@@ -243,7 +243,7 @@ export default function TableWithPagination({
                                                             <DropdownMenuContent align="end">
                                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                                 <DropdownMenuSeparator />
-                                                                {actions.map((action, index) => (
+                                                                {canAdd && actions.map((action, index) => (
                                                                     <div key={index}>
                                                                         <DropdownMenuItem
                                                                             key={typeof action.label === 'string' ? action.label : 'dynamic-label'}

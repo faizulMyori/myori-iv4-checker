@@ -11,7 +11,7 @@ import {
 import { closeSerialPort, listSerialPorts, openSerialPort, sendSerialData } from "../../serial_helpers";
 
 export function addSERIALEventListeners() {
-  ipcMain.handle(SERIAL_CONNECT, async (event, { com }) => openSerialPort(com, event));
+  ipcMain.handle(SERIAL_CONNECT, async (event, { com }) => openSerialPort(com));
   ipcMain.handle(SERIAL_DISCONNECT, async () => closeSerialPort());
   ipcMain.handle(SERIAL_SEND, async (event, data) => sendSerialData(data));
   ipcMain.handle(SERIAL_GET, async () => listSerialPorts());

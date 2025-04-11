@@ -15,12 +15,15 @@ export default function ConnectionPage() {
     const [coms, setComs] = useState([])
     const [port, setPort] = useState("")
     const [com, setCom] = useState("")
+    const [autoReconnect, setAutoReconnect] = useState(true)
     const { conn, setConn }: any = useContext(UserContext);
     const [connectionStatus, setConnectionStatus] = useState<"idle" | "connecting" | "connected" | "failed" | "disconnecting">(conn)
 
     const handleConnect = () => {
         setConnectionStatus("connecting")
         setConn("connecting")
+        setAutoReconnect(true)
+        window.tcpConnection.set_auto_reconnect(true)
         window.sqlite.create_connection(host, port, com).then(() => {
             window.tcpConnection.tcp_connect({ ip: host, port: port }).then(() => {
                 window.serial.serial_com_open({ com: com }).then(() => {
@@ -44,6 +47,8 @@ export default function ConnectionPage() {
     const handleDisconnect = () => {
         setConnectionStatus("disconnecting")
         setConn("disconnecting")
+        setAutoReconnect(false)
+        window.tcpConnection.set_auto_reconnect(false)
         window.tcpConnection.tcp_disconnect().then(async (data: any) => {
             await window.serial.serial_com_disconnect()
             setConnectionStatus("idle")
@@ -52,6 +57,11 @@ export default function ConnectionPage() {
             setConnectionStatus("idle")
             setConn("disconnecting")
         })
+    }
+
+    const handleAutoReconnectChange = (checked: boolean) => {
+        setAutoReconnect(checked)
+        window.tcpConnection.set_auto_reconnect(checked)
     }
 
     useEffect(() => {
@@ -111,6 +121,15 @@ export default function ConnectionPage() {
                             }
                         </SelectContent>
                     </Select>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                    <Switch
+                        id="auto-reconnect"
+                        checked={autoReconnect}
+                        onCheckedChange={handleAutoReconnectChange}
+                    />
+                    <Label htmlFor="auto-reconnect">Auto Reconnect</Label>
                 </div>
             </CardContent>
             <CardFooter className="flex justify-between">

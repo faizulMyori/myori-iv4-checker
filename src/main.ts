@@ -16,8 +16,8 @@ function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    maximizable: false,
-    fullscreen: true,
+    maximizable: true,
+    //fullscreen: true,
     autoHideMenuBar: true,
     webPreferences: {
       devTools: true,
@@ -26,6 +26,7 @@ function createWindow() {
       nodeIntegrationInSubFrames: false,
       preload: preload,
     },
+    titleBarStyle: "hidden",
   });
   registerListeners(mainWindow);
 

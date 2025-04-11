@@ -6,24 +6,40 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useProduction } from "../context/production-context"
 import { toast } from "sonner"
 import React from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export default function DuplicatedData() {
   const { duplicatedData, handleDownload, handleRemoveDuplicatedEntry, capturedData } = useProduction()
+  const [deleteSerial, setDeleteSerial] = React.useState<string | null>(null)
 
   const handleRemove = (serial: string) => {
-    handleRemoveDuplicatedEntry(serial)
+    setDeleteSerial(serial)
+  }
 
-    // Check if the serial is in captured data
-    const isInCapturedData = capturedData.some((item: any) => item.serial === serial)
+  const confirmDelete = () => {
+    if (deleteSerial) {
+      handleRemoveDuplicatedEntry(deleteSerial)
 
-    if (isInCapturedData) {
-      toast.success("Serial number removed", {
-        description: `${serial} has been removed from duplicated data.`,
-      })
-    } else {
-      toast.success("Serial number returned", {
-        description: `${serial} has been removed from duplicated data and returned to unused serials.`,
-      })
+      // Check if the serial is in captured data
+      const isInCapturedData = capturedData.some((item: any) => item.serial === deleteSerial)
+
+      if (isInCapturedData) {
+        toast.success("Serial number removed", {
+          description: `${deleteSerial} has been removed from duplicated data.`,
+        })
+      } else {
+        toast.success("Serial number returned", {
+          description: `${deleteSerial} has been removed from duplicated data and returned to unused serials.`,
+        })
+      }
+      setDeleteSerial(null)
     }
   }
 
@@ -61,6 +77,25 @@ export default function DuplicatedData() {
           <div className="text-center text-muted-foreground py-8">No duplicated serial numbers</div>
         )}
       </CardContent>
+
+      <Dialog open={deleteSerial !== null} onOpenChange={() => setDeleteSerial(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Removal</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove {deleteSerial} from duplicated data?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteSerial(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

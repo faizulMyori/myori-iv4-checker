@@ -65,7 +65,7 @@ export function exposeDBContext() {
     get_labels: () => ipcRenderer.invoke(DB_GET_LABELS),
     search_labels: (query: string) => ipcRenderer.invoke(DB_SEARCH_LABELS, query),
     update_label: (data: any) => ipcRenderer.invoke(DB_UPDATE_LABEL, data),
-    delete_label: (id: number) => ipcRenderer.invoke(DB_DELETE_LABEL, id),
+    delete_label: (data: number | string) => ipcRenderer.invoke(DB_DELETE_LABEL, data),
     check_serial_numbers: (data: any) => ipcRenderer.invoke(DB_FIND_LABEL, data),
 
     create_storage_treshold: (value: any) => ipcRenderer.invoke(DB_CREATE_STORAGE_TRESHOLD, value),
@@ -73,5 +73,7 @@ export function exposeDBContext() {
 
     create_connection: (ip: any, port: any, com: any) => ipcRenderer.invoke(DB_CREATE_CONNECTION, { ip, port, com }),
     get_connections: () => ipcRenderer.invoke(DB_GET_CONNECTIONS),
+
+    fetchAll: (query: string, params?: any[]) => ipcRenderer.invoke('db:fetchAll', { query, params }),
   });
 }

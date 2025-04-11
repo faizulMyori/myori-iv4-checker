@@ -50,7 +50,7 @@ export default function ProductionDialog() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="secondary" size="lg">
+        <Button variant="secondary" size="lg" disabled={productionStatus === "RUNNING" || productionStatus === "HOLD"}>
           New Production
         </Button>
       </DialogTrigger>
@@ -68,7 +68,7 @@ export default function ProductionDialog() {
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="batchNo" className="text-right">
-              Batch No.
+              Batch No. <span className="text-red-500">*</span>
             </Label>
             <Input
               id="batchNo"
@@ -77,7 +77,11 @@ export default function ProductionDialog() {
               onChange={(e) => setBatchNo(e.target.value)}
               className={`col-span-3 ${batchError ? "border-red-500" : ""}`}
               placeholder="Enter batch number"
+              required
             />
+            {!batchNo && (
+              <div className="text-right text-xs col-span-4 text-red-500">Batch number is required</div>
+            )}
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="shiftNo" className="text-right">
@@ -244,7 +248,7 @@ export default function ProductionDialog() {
           <Button
             type="button"
             onClick={saveProduction}
-            disabled={productionStatus === "RUNNING" || labelRolls.some((roll: any) => !roll.verified) || batchError}
+            disabled={productionStatus === "RUNNING" || labelRolls.some((roll: any) => !roll.verified) || batchError || !batchNo}
           >
             Save Production Batch
           </Button>
