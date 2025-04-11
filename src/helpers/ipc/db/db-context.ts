@@ -29,7 +29,9 @@ import {
   DB_UPDATE_LABEL,
   DB_FIND_LABEL,
   DB_CREATE_STORAGE_TRESHOLD,
-  DB_GET_STORAGE_TRESHOLD
+  DB_GET_STORAGE_TRESHOLD,
+  DB_CREATE_EXCEL_SAVE_PATH,
+  DB_GET_EXCEL_SAVE_PATH
 } from "./db-channels";
 
 export function exposeDBContext() {
@@ -70,6 +72,9 @@ export function exposeDBContext() {
 
     create_storage_treshold: (value: any) => ipcRenderer.invoke(DB_CREATE_STORAGE_TRESHOLD, value),
     get_storage_treshold: () => ipcRenderer.invoke(DB_GET_STORAGE_TRESHOLD),
+
+    create_excel_save_path: (path: string): Promise<boolean> => ipcRenderer.invoke(DB_CREATE_EXCEL_SAVE_PATH, path),
+    get_excel_save_path: (): Promise<{ path: string }> => ipcRenderer.invoke(DB_GET_EXCEL_SAVE_PATH),
 
     create_connection: (ip: any, port: any, com: any) => ipcRenderer.invoke(DB_CREATE_CONNECTION, { ip, port, com }),
     get_connections: () => ipcRenderer.invoke(DB_GET_CONNECTIONS),

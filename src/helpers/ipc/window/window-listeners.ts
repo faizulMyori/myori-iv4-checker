@@ -4,6 +4,7 @@ import {
   WIN_DIALOG_INFO,
   WIN_MAXIMIZE_CHANNEL,
   WIN_MINIMIZE_CHANNEL,
+  WIN_SELECT_DIRECTORY,
 } from "./window-channels";
 
 export function addWindowEventListeners(mainWindow: BrowserWindow) {
@@ -42,5 +43,20 @@ export function addWindowEventListeners(mainWindow: BrowserWindow) {
         buttons: ['OK']
       });
     }
+  });
+
+  ipcMain.handle(WIN_SELECT_DIRECTORY, async (event, data) => {
+    if (mainWindow) {
+      const result = await dialog.showOpenDialog(mainWindow, {
+        title: data.title,
+        message: data.message,
+        properties: ['openDirectory']
+      });
+      if (!result.canceled && result.filePaths.length > 0) {
+        return result.filePaths[0];
+      }
+      return null;
+    }
+    return null;
   });
 }

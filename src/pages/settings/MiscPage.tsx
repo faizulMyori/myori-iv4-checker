@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { LucideIcon, Monitor, Moon, Sun } from 'lucide-react';
+import { LucideIcon, Monitor, Moon, Sun, FolderOpen } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { HTMLAttributes } from 'react';
 import { toggleTheme, getTheme, setTheme } from "@/helpers/theme_helpers";
@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Label } from '@/components/ui/label';
 import StorageBar from '@/components/StorageBar';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Slider } from "@/components/ui/slider"
 import { SliderWithInput } from '@/components/ui/slider-with-input';
 
@@ -24,6 +25,7 @@ export default function MiscPage({ className = '', ...props }: HTMLAttributes<HT
     size: 0
   });
   const [storageThreshold, setStorageThreshold] = React.useState(50);
+  const [excelSavePath, setExcelSavePath] = React.useState("");
 
   useEffect(() => {
     (async () => {
@@ -38,11 +40,43 @@ export default function MiscPage({ className = '', ...props }: HTMLAttributes<HT
         free: result.free,
         size: result.size
       }));
-      window.sqlite.get_storage_treshold().then((result: any) => {
-       setStorageThreshold(parseInt(result.treshold))
+
+      window.sqlite.get_excel_save_path().then((result: { path: string }) => {
+        console.log("Excel save path:", result);
+        if (result && result.path) {
+          setExcelSavePath(JSON.parse(result.path));
+        } else {
+          setExcelSavePath("C:/");
+        }
+        window.sqlite.get_storage_treshold().then((result: any) => {
+          setStorageThreshold(parseInt(result.treshold))
+        });
       });
     })();
   }, []);
+
+  const handleExcelPathChange = async (path: string) => {
+    console.log("Updating Excel path to:", path);
+    setExcelSavePath(path);
+    try {
+      await window.sqlite.create_excel_save_path(path);
+      console.log("Excel save path updated");
+    } catch (error) {
+      console.error("Error updating Excel save path:", error);
+    }
+  };
+
+  const handleDirectorySelect = async () => {
+    try {
+      const result = await window.electronWindow.selectDirectory('Select Directory', 'Please select a directory to save Excel files');
+      console.log("Selected directory:", result);
+      if (result) {
+        await handleExcelPathChange(result);
+      }
+    } catch (error) {
+      console.error("Error selecting directory:", error);
+    }
+  };
 
   const tabs: { value: ThemeMode; icon: LucideIcon; label: string }[] = [
     { value: 'light', icon: Sun, label: 'Light' },
@@ -88,10 +122,28 @@ export default function MiscPage({ className = '', ...props }: HTMLAttributes<HT
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="treshold">Storage Treshold (%)</Label>
-            <Input id="treshold" placeholder="80" value={storageThreshold} type='number' min={50} max={100} onChange={(e:any) => {
+            <Input id="treshold" placeholder="80" value={storageThreshold} type='number' min={50} max={100} onChange={(e: any) => {
               setStorageThreshold(e.target.value)
               window.sqlite.create_storage_treshold(e.target.value)
             }} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="excel-path">Excel Save Directory</Label>
+            <div className="flex gap-2">
+              <Input
+                id="excel-path"
+                placeholder="C:/"
+                value={excelSavePath}
+                onChange={(e: any) => handleExcelPathChange(e.target.value)}
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleDirectorySelect}
+              >
+                <FolderOpen className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>

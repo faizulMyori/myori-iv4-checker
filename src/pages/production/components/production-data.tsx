@@ -68,14 +68,14 @@ export default function ProductionData() {
     <Card className="col-span-3">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">PRODUCTION DATA</CardTitle>
-        {canEdit && (
+        {/* {canEdit && (
           <button
             onClick={() => isEditing ? handleSave() : setIsEditing(true)}
             className="text-sm text-blue-600 hover:text-blue-800"
           >
             {isEditing ? "Save" : "Edit"}
           </button>
-        )}
+        )} */}
       </CardHeader>
       <CardContent className="space-y-2">
         {savedProduction ? (

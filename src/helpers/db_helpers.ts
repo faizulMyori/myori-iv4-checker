@@ -6,6 +6,7 @@ export async function initializeDatabase() {
     const dbPath = "./database.db";
     const isUri = false;
     await setdbPath(dbPath, isUri);
+    initializeSettingsTable();
     initializeBatchesTable();
     initializeUsersTable();
     initializeProductsTable();
@@ -28,11 +29,6 @@ async function initializeStorageTable() {
         );
       `;
   await executeQuery(sql);
-
-  const insertStorageSql = `
-      INSERT INTO storage_treshold (treshold) VALUES (?);
-    `;
-  await executeQuery(insertStorageSql, ['80']);
 }
 
 async function initializeUsersTable() {
@@ -120,5 +116,16 @@ async function initializeLicensesDatabase() {
           timestamp INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
       `;
+  await executeQuery(sql);
+}
+
+async function initializeSettingsTable() {
+  const sql = `
+    CREATE TABLE IF NOT EXISTS excel_path (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      excel_save_path TEXT NOT NULL DEFAULT 'C:/',
+      created_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
   await executeQuery(sql);
 }

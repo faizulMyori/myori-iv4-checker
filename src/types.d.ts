@@ -44,6 +44,7 @@ interface ElectronWindow {
   maximize: () => Promise<void>;
   close: () => Promise<void>;
   info: (title: any, message: any) => Promise<void>;
+  selectDirectory: (title: string, message: string) => Promise<string | null>;
 }
 
 interface sqlite {
@@ -89,6 +90,9 @@ interface sqlite {
   create_storage_treshold: (value: any) => Promise<void>;
   get_storage_treshold: () => Promise<any>;
 
+  create_excel_save_path: (path: string) => Promise<void>;
+  get_excel_save_path: () => Promise<{ path: string }>;
+
   create_connection: (ip: any, port: any, com: any) => Promise<void>;
   get_connections: () => Promise<any[]>;
 
@@ -107,7 +111,7 @@ interface tcpConnection {
 }
 
 interface excel {
-  save_to_excel: (data: any) => Promise<void>;
+  save_to_excel: (data: any, filePath?: string) => Promise<void>;
 }
 
 interface serial {

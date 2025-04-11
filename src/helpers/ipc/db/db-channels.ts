@@ -29,3 +29,5 @@ export const DB_UPDATE_LABEL = "db:updateLabel";
 export const DB_FIND_LABEL = "db:findLabel";
 export const DB_CREATE_STORAGE_TRESHOLD = "db:createStorageTreshold";
 export const DB_GET_STORAGE_TRESHOLD = "db:getStorageTreshold";
+export const DB_CREATE_EXCEL_SAVE_PATH = "db:createExcelSavePath";
+export const DB_GET_EXCEL_SAVE_PATH = "db:getExcelSavePath";

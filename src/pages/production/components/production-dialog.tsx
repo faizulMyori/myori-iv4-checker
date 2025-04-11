@@ -45,18 +45,27 @@ export default function ProductionDialog() {
     checkDuplicates,
     setCheckDuplicates,
     checkForDuplicatedRolls,
+    savedProduction,
   } = useProduction()
+
+  const [isEditing, setIsEditing] = React.useState(false)
+
+  React.useEffect(() => {
+    if (savedProduction) {
+      setIsEditing(true)
+    }
+  }, [savedProduction])
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="secondary" size="lg" disabled={productionStatus === "RUNNING" || productionStatus === "HOLD"}>
-          New Production
+          {savedProduction ? "Edit Production" : "New Production"}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>New Production Batch</DialogTitle>
+          <DialogTitle>{savedProduction ? "Edit Production Batch" : "New Production Batch"}</DialogTitle>
           <DialogDescription>Enter the production details and label roll information</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -64,7 +73,7 @@ export default function ProductionDialog() {
             <Label htmlFor="productionDate" className="text-right">
               Production Date
             </Label>
-            <Input id="productionDate" value={new Date().toISOString().split("T")[0]} readOnly className="col-span-3 bg-muted" />
+            <Input id="productionDate" value={today} readOnly className="col-span-3 bg-muted" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="batchNo" className="text-right">
@@ -73,7 +82,7 @@ export default function ProductionDialog() {
             <Input
               id="batchNo"
               value={batchNo}
-              disabled={productionStatus === "RUNNING"}
+              disabled={productionStatus === "RUNNING" || isEditing}
               onChange={(e) => setBatchNo(e.target.value)}
               className={`col-span-3 ${batchError ? "border-red-500" : ""}`}
               placeholder="Enter batch number"
@@ -112,7 +121,7 @@ export default function ProductionDialog() {
             </Label>
             <div className="col-span-3">
               <Select
-                disabled={productionStatus === "RUNNING"}
+                disabled={productionStatus === "RUNNING" || isEditing}
                 value={selectedProduct}
                 onValueChange={(value) => {
                   setSelectedProduct(value)
@@ -250,7 +259,7 @@ export default function ProductionDialog() {
             onClick={saveProduction}
             disabled={productionStatus === "RUNNING" || labelRolls.some((roll: any) => !roll.verified) || batchError || !batchNo}
           >
-            Save Production Batch
+            {savedProduction ? "Update Production Batch" : "Save Production Batch"}
           </Button>
         </div>
       </DialogContent>

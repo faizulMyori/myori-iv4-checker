@@ -32,7 +32,8 @@ export function HistoryTable({ data, onViewSerialNumbers, onDeleteBatch }: Histo
         const filtered = data.filter(item =>
             item.batch_no.toLowerCase().includes(query.toLowerCase()) ||
             item.shift_number.toLowerCase().includes(query.toLowerCase()) ||
-            item.product?.sku.toLowerCase().includes(query.toLowerCase())
+            item.product?.sku.toLowerCase().includes(query.toLowerCase()) ||
+            item.labels.some(label => label.serial_number.toLowerCase().includes(query.toLowerCase()))
         )
         setFilteredData(filtered)
     }, [data])

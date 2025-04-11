@@ -91,6 +91,10 @@ interface ProductionContextType {
   setUnusedSerials: React.Dispatch<React.SetStateAction<string[]>>
   removeFromUnusedSerials: (serial: string) => void
   addToUnusedSerials: (serial: string) => void
+  isSavePathModalOpen: boolean
+  setIsSavePathModalOpen: (value: boolean) => void
+  savePath: string
+  handleConfirmDownload: () => void
 }
 
 // Create the context with a default value

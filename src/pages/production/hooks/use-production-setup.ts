@@ -82,19 +82,39 @@ export function useProductionSetup(labelRolls: LabelRoll[], calculateTotalLabels
       rating: products.find((p: any) => p.id.toString() === selectedProduct)?.rating,
       size: products.find((p: any) => p.id.toString() === selectedProduct)?.size,
     })
-    window.sqlite
-      .create_batch({
-        date: today,
-        batch_no: batchNo,
-        product_id: selectedProduct,
-        shift_number: shiftNo,
-      })
-      .then((data: any) => {
-        setBatchID(data?.id)
-      })
-      .catch((error: any) => {
-        console.log(error)
-      })
+
+    if (batchID) {
+      // Update existing batch
+      window.sqlite
+        .update_batch({
+          id: batchID,
+          batch_no: batchNo,
+          product_id: selectedProduct,
+          shift_number: shiftNo,
+          date: today
+        })
+        .then((data: any) => {
+          console.log("Batch updated:", data)
+        })
+        .catch((error: any) => {
+          console.error("Failed to update batch:", error)
+        })
+    } else {
+      // Create new batch
+      window.sqlite
+        .create_batch({
+          date: today,
+          batch_no: batchNo,
+          product_id: selectedProduct,
+          shift_number: shiftNo,
+        })
+        .then((data: any) => {
+          setBatchID(data?.id)
+        })
+        .catch((error: any) => {
+          console.error("Failed to create batch:", error)
+        })
+    }
     setOpen(false)
   }
 

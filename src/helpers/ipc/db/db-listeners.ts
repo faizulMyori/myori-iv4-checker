@@ -31,6 +31,8 @@ import {
   DB_FIND_LABEL,
   DB_CREATE_STORAGE_TRESHOLD,
   DB_GET_STORAGE_TRESHOLD,
+  DB_CREATE_EXCEL_SAVE_PATH,
+  DB_GET_EXCEL_SAVE_PATH,
 } from "./db-channels";
 
 import {
@@ -213,8 +215,10 @@ export function addDBEventListeners() {
 
   ipcMain.handle(DB_UPDATE_BATCH, async (event, data) => {
     try {
-      return await executeQuery("UPDATE users SET used_labels = ? WHERE product_id = ? AND batch_no = ?", [data.used_labels, data.product_id, data.batch_no]);
+      return await executeQuery("UPDATE batches SET batch_no = ?, shift_number = ?, product_id = ?, date = ? WHERE id = ?",
+        [data.batch_no, data.shift_number, data.product_id, data.date, data.id]);
     } catch (error) {
+      console.error("Failed to update batch:", error);
       return false;
     }
   });
@@ -315,6 +319,42 @@ export function addDBEventListeners() {
     }
   });
 
+  ipcMain.handle(DB_CREATE_EXCEL_SAVE_PATH, async (event, data) => {
+    try {
+      await executeQuery("DELETE FROM excel_path");
+      await executeQuery(
+        "INSERT INTO excel_path (excel_save_path) VALUES (?)",
+        [JSON.stringify(data)]
+      );
+      return true;
+    } catch (error) {
+      console.error("Error saving Excel save path:", error);
+      return false;
+    }
+  });
+
+  ipcMain.handle(DB_GET_EXCEL_SAVE_PATH, async (event, data) => {
+    try {
+      // Get all entries from excel_path table
+      const excel_save = await fetchOne<{ excel_save_path: string }>("SELECT * FROM excel_path ORDER BY id DESC LIMIT 1");
+      console.log("Raw database excel_save:", excel_save);
+
+      if (!excel_save) {
+        console.log("No data found in excel_path table, returning default");
+        return { path: "C:/" };
+      }
+
+      // Get the first (most recent) entry
+      const path = excel_save.excel_save_path;
+      console.log("Returning saved path:", excel_save);
+      return { path };
+    } catch (error) {
+      console.error("Error retrieving Excel save path:", error);
+      return { path: "C:/" };
+    }
+  });
+
+
   ipcMain.handle(DB_CREATE_STORAGE_TRESHOLD, async (event, data) => {
     try {
       let deleteTreshold = await executeQuery("DELETE FROM storage_treshold");
@@ -325,15 +365,14 @@ export function addDBEventListeners() {
     }
   });
 
-  ipcMain.handle(DB_GET_STORAGE_TRESHOLD, async (event) => {
+  ipcMain.handle(DB_GET_STORAGE_TRESHOLD, async (event, data) => {
     try {
-      let data: any = await fetchOne("SELECT * FROM storage_treshold ORDER BY id DESC LIMIT 1");
-      return data
+      let storage: any = await fetchOne("SELECT * FROM storage_treshold ORDER BY id DESC LIMIT 1");
+      return storage
     } catch (error) {
-      return error;
+      return false;
     }
   });
-
   // Add new handler for raw SQL queries
   ipcMain.handle('db:fetchAll', async (event, { query, params = [] }) => {
     try {

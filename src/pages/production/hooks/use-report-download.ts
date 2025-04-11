@@ -1,5 +1,9 @@
 "use client"
 
+import { useState } from "react"
+import { getSettings } from "@/helpers/settings_helpers"
+import { toast } from "sonner"
+
 export function useReportDownload(
   capturedData: any[],
   missingData: any[],
@@ -9,7 +13,27 @@ export function useReportDownload(
   productData: any,
   unusedSerials: string[] = [],
 ) {
-  const handleDownload = (section: string) => {
+  const [isSavePathModalOpen, setIsSavePathModalOpen] = useState(false)
+  const [savePath, setSavePath] = useState("")
+  const [pendingSection, setPendingSection] = useState<string | null>(null)
+
+  const handleDownload = async (section: string) => {
+    try {
+      const settings = await getSettings()
+      setSavePath(settings.excelSavePath)
+      setPendingSection(section)
+      setIsSavePathModalOpen(true)
+    } catch (error) {
+      console.error("Failed to get save path:", error)
+      toast.error("Failed to get save path", {
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+      })
+    }
+  }
+
+  const handleConfirmDownload = async () => {
+    if (!pendingSection) return
+
     // Common metadata for most sections
     const metadata = ["SIRIM SERIAL NO.", "BATCH NO", "BRAND/TRADEMARK", "MODEL", "TYPE", "RATING", "SIZE"]
 
@@ -47,7 +71,7 @@ export function useReportDownload(
     let sheets = []
 
     // For different sections, get the relevant data
-    switch (section) {
+    switch (pendingSection) {
       case "captured":
         data = capturedData.filter(
           (item) =>
@@ -141,11 +165,43 @@ export function useReportDownload(
 
     // Save all the sections to Excel
     try {
-      window.excel.save_to_excel(sheets)
+      // Generate a date string in DD-MM-YYYY format
+      const date = new Date()
+      const day = String(date.getDate()).padStart(2, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      const dateStr = `${day}-${month}-${year}`
+
+      // Parse the save path from JSON
+      const parsedSavePath = JSON.parse(savePath)
+
+      // Create the full file path with batch number
+      const filePath = `${parsedSavePath}/${dateStr}-${title}-${batchNo}.xlsx`
+
+      // Save the file directly to the specified path
+      await window.excel.save_to_excel(sheets, filePath)
+
+      // Show success toast
+      toast.success("Excel file saved successfully", {
+        description: `File saved to: ${filePath}`,
+      })
     } catch (error) {
       console.error("Failed to save to Excel:", error)
+      // Show error toast
+      toast.error("Failed to save Excel file", {
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+      })
     }
+
+    setIsSavePathModalOpen(false)
+    setPendingSection(null)
   }
 
-  return { handleDownload }
+  return {
+    handleDownload,
+    isSavePathModalOpen,
+    setIsSavePathModalOpen,
+    savePath,
+    handleConfirmDownload
+  }
 }
