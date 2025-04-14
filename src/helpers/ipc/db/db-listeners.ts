@@ -273,13 +273,13 @@ export function addDBEventListeners() {
 
     try {
       let data: any = await fetchAll("SELECT * FROM labels WHERE serial BETWEEN ? AND ?", [startNo, endNo]);
-      if (data.length > 0) {
-        let serials = data.map((item: any) => item.serial);
-        ipcMain.emit(WIN_DIALOG_INFO, {
-          title: "Overlap Found",
-          message: `Overlap Serials: ${serials.join(", ")}`,
-        });
-      }
+      // if (data.length > 0) {
+      //   let serials = data.map((item: any) => item.serial);
+      //   ipcMain.emit(WIN_DIALOG_INFO, {
+      //     title: "Overlap Found",
+      //     message: `Overlap Serials: ${serials.join(", ")}`,
+      //   });
+      // }
       return data
     } catch (error) {
       return false;

@@ -71,6 +71,7 @@ export async function connectTcp(ip: string, port: number, event: any) {
             });
 
             // Handle connection close (Trigger reconnection)
+            // Handle connection close (Trigger reconnection)
             client?.on('close', () => {
                 console.log('TCP connection closed');
                 event.sender.send(TCP_CLOSED);
@@ -78,9 +79,15 @@ export async function connectTcp(ip: string, port: number, event: any) {
                 if (autoReconnectEnabled) {
                     attemptReconnect(ip, port, event);
                 }
-                ipcMain.emit(WIN_DIALOG_INFO, {
-                    title: "Error",
-                    message: `Connection Closed!${autoReconnectEnabled ? ' Reconnecting....' : ''}`,
+                console.log('Emitting toast notification:', {
+                    title: "Connection Closed",
+                    description: autoReconnectEnabled ? 'Reconnecting...' : 'Connection closed',
+                    type: 'error'
+                });
+                event.sender.send('win-toast', {
+                    title: "Connection Closed",
+                    description: autoReconnectEnabled ? 'Reconnecting...' : 'Connection closed',
+                    type: 'error'
                 });
             });
 

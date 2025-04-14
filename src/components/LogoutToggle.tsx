@@ -27,7 +27,7 @@ export default function LogoutToggle() {
 
   return (
     <>
-      <Button variant="destructive" onClick={toggleLogout} disabled={prodStatus === 'started'}>
+      <Button variant="destructive" onClick={toggleLogout} disabled={prodStatus === 'started' || prodStatus === 'hold'}>
         Logout
       </Button>
 

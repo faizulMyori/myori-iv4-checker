@@ -46,6 +46,7 @@ export default function ProductionDialog() {
     setCheckDuplicates,
     checkForDuplicatedRolls,
     savedProduction,
+    setLabelRolls,
   } = useProduction()
 
   const [isEditing, setIsEditing] = React.useState(false)
@@ -55,6 +56,10 @@ export default function ProductionDialog() {
       setIsEditing(true)
     }
   }, [savedProduction])
+
+  const handleResetLabelRolls = () => {
+    setLabelRolls([{ id: "1", rollNumber: "1", startNumber: "", endNumber: "", verified: false }])
+  }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -82,7 +87,7 @@ export default function ProductionDialog() {
             <Input
               id="batchNo"
               value={batchNo}
-              disabled={productionStatus === "RUNNING" || isEditing}
+              disabled={productionStatus === "RUNNING"}
               onChange={(e) => setBatchNo(e.target.value)}
               className={`col-span-3 ${batchError ? "border-red-500" : ""}`}
               placeholder="Enter batch number"
@@ -121,7 +126,7 @@ export default function ProductionDialog() {
             </Label>
             <div className="col-span-3">
               <Select
-                disabled={productionStatus === "RUNNING" || isEditing}
+                disabled={productionStatus === "RUNNING"}
                 value={selectedProduct}
                 onValueChange={(value) => {
                   setSelectedProduct(value)
@@ -148,9 +153,18 @@ export default function ProductionDialog() {
             </div>
           </div>
 
-          <div className="mt-4">
-            <div className="flex justify-between items-center mb-2">
-              <Label>Label Rolls</Label>
+          <div className="flex justify-between items-center mb-2">
+            <Label>Label Rolls</Label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={productionStatus === "RUNNING" || !isEditing}
+                onClick={handleResetLabelRolls}
+              >
+                Reset Rolls
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -161,73 +175,49 @@ export default function ProductionDialog() {
                 <Plus className="h-4 w-4 mr-1" /> Add Roll
               </Button>
             </div>
-
-            {labelRolls.map((roll: any) => (
-              <div key={roll.id} className="grid grid-cols-12 gap-2 mb-2 items-center">
-                <div className="col-span-3">
-                  <Input
-                    placeholder="Roll #"
-                    value={roll.rollNumber}
-                    readOnly
-                    className="bg-muted"
-                    disabled={roll.verified}
-                  />
-                </div>
-                <div className="col-span-3">
-                  <Input
-                    placeholder="Start #"
-                    value={roll.startNumber}
-                    onChange={(e) => updateLabelRoll(roll.id, "startNumber", e.target.value)}
-                    disabled={roll.verified}
-                  />
-                </div>
-                <div className="col-span-3">
-                  <Input
-                    placeholder="End #"
-                    value={roll.endNumber}
-                    onChange={(e) => updateLabelRoll(roll.id, "endNumber", e.target.value)}
-                    disabled={roll.verified}
-                  />
-                </div>
-                <div className="col-span-3 flex justify-end">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={roll.verified ? "default" : "outline"}
-                    onClick={() => verifyLabelRoll(roll.id)}
-                    disabled={roll.verified}
-                  >
-                    <Check className="h-4 w-4" />
-                    {roll.verified ? "Verified" : "Check"}
-                  </Button>
-                </div>
-              </div>
-            ))}
           </div>
 
-          {/* <div className="mt-4">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                const duplicates = checkForDuplicatedRolls()
-                if (duplicates.length > 0) {
-                  toast.error(`Found ${duplicates.length} duplicate serial numbers across rolls`, {
-                    description: `First few duplicates: ${duplicates.slice(0, 3).join(", ")}${duplicates.length > 3 ? "..." : ""}`,
-                    duration: 5000,
-                  })
-                } else {
-                  toast.success("No duplicate serial numbers found across rolls", {
-                    duration: 3000,
-                  })
-                }
-              }}
-              disabled={!labelRolls.some((roll: any) => roll.verified) || productionStatus === "RUNNING"}
-            >
-              Check for Duplicates Across Rolls
-            </Button>
-          </div> */}
+          {labelRolls.map((roll: any) => (
+            <div key={roll.id} className="grid grid-cols-12 gap-2 mb-2 items-center">
+              <div className="col-span-3">
+                <Input
+                  placeholder="Roll #"
+                  value={roll.rollNumber}
+                  readOnly
+                  className="bg-muted"
+                  disabled={roll.verified}
+                />
+              </div>
+              <div className="col-span-3">
+                <Input
+                  placeholder="Start #"
+                  value={roll.startNumber}
+                  onChange={(e) => updateLabelRoll(roll.id, "startNumber", e.target.value)}
+                  disabled={roll.verified}
+                />
+              </div>
+              <div className="col-span-3">
+                <Input
+                  placeholder="End #"
+                  value={roll.endNumber}
+                  onChange={(e) => updateLabelRoll(roll.id, "endNumber", e.target.value)}
+                  disabled={roll.verified}
+                />
+              </div>
+              <div className="col-span-3">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={roll.verified ? "default" : "outline"}
+                  onClick={() => verifyLabelRoll(roll.id)}
+                  disabled={roll.verified}
+                >
+                  <Check className="h-4 w-4" />
+                  {roll.verified ? "Verified" : "Check"}
+                </Button>
+              </div>
+            </div>
+          ))}
 
           <div className="mt-6 border-t pt-4">
             <div className="flex items-center justify-between">

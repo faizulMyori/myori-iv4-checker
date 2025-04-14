@@ -6,6 +6,26 @@ import "./localization/i18n";
 import { updateAppLanguage } from "./helpers/language_helpers";
 import { router } from "./routes/router";
 import { RouterProvider } from "@tanstack/react-router";
+import { Toaster, toast } from "sonner"
+import { WIN_TOAST } from "./helpers/ipc/window/window-channels";
+
+declare global {
+  interface Window {
+    electron: {
+      ipcRenderer: {
+        on: (channel: string, callback: (event: any, ...args: any[]) => void) => void;
+      };
+    };
+  }
+}
+
+type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+interface ToastMessage {
+  title: string;
+  description?: string;
+  type: ToastType;
+}
 
 export type UserContextType = {
   user: null | undefined;
@@ -31,6 +51,14 @@ export default function App() {
   useEffect(() => {
     syncThemeWithLocal();
     updateAppLanguage(i18n);
+    const handleToast = (_: any, { title, description, type }: ToastMessage) => {
+      console.log('Toast received:', { title, description, type });
+      toast[type](title, { description });
+    };
+    window.electron.ipcRenderer.on('win-toast', handleToast);
+    return () => {
+      window.electron.ipcRenderer.on('win-toast', handleToast);
+    };
   }, [i18n]);
 
   useEffect(() => {
@@ -84,7 +112,10 @@ export default function App() {
 const root = createRoot(document.getElementById("app")!);
 root.render(
   // <React.StrictMode>
-  <App />
+  <>
+    <Toaster position="top-right" richColors closeButton />
+    <App />
+  </>
   // </React.StrictMode>
 );
 

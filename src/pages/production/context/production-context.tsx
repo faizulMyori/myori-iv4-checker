@@ -55,6 +55,7 @@ interface ProductionContextType {
   products: any[]
   loading: boolean
   labelRolls: LabelRoll[]
+  setLabelRolls: React.Dispatch<React.SetStateAction<LabelRoll[]>>
   addLabelRoll: () => void
   updateLabelRoll: (id: string, field: keyof LabelRoll, value: string | boolean) => void
   verifyLabelRoll: (id: string) => void

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { useProduction } from "../context/production-context"
 import ProductionDialog from "./production-dialog"
 import SavePathModal from "./save-path-modal"
+import ResetConfirmationModal from "./reset-confirmation-modal"
 import React from "react"
 
 export default function ProductionControls() {
@@ -21,6 +22,17 @@ export default function ProductionControls() {
     handleConfirmDownload,
     resetProduction,
   } = useProduction()
+
+  const [isResetModalOpen, setIsResetModalOpen] = React.useState(false)
+
+  const handleResetClick = () => {
+    setIsResetModalOpen(true)
+  }
+
+  const handleResetConfirm = () => {
+    resetProduction()
+    setIsResetModalOpen(false)
+  }
 
   return (
     <div className="flex items-center justify-between">
@@ -68,7 +80,7 @@ export default function ProductionControls() {
           size="lg"
           className="bg-red-700 hover:bg-red-600"
           disabled={productionStatus === "RUNNING" || productionStatus === "HOLD"}
-          onClick={resetProduction}
+          onClick={handleResetClick}
         >
           Reset Production
         </Button>
@@ -78,6 +90,11 @@ export default function ProductionControls() {
         onClose={() => setIsSavePathModalOpen(false)}
         onConfirm={handleConfirmDownload}
         savePath={savePath}
+      />
+      <ResetConfirmationModal
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+        onConfirm={handleResetConfirm}
       />
       <div
         className={`text-lg font-semibold ${productionStatus === "RUNNING"

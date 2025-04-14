@@ -16,7 +16,6 @@ import { useLabelRolls } from "./hooks/use-label-rolls"
 import { useProductionSetup } from "./hooks/use-production-setup"
 import { useReportDownload } from "./hooks/use-report-download"
 import { ProductionProvider } from "./context/production-context"
-import { Toaster } from "sonner"
 import { toast } from "sonner"
 import React from "react"
 
@@ -381,6 +380,7 @@ export default function ProductionPage() {
     products,
     loading,
     labelRolls,
+    setLabelRolls,
     addLabelRoll,
     updateLabelRoll,
     verifyLabelRoll,
@@ -482,7 +482,6 @@ export default function ProductionPage() {
           </div>
         </div>
         <Footer />
-        <Toaster position="top-right" richColors closeButton />
       </div>
     </ProductionProvider>
   )

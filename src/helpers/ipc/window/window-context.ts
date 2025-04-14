@@ -1,18 +1,34 @@
 import {
-  WIN_MINIMIZE_CHANNEL,
-  WIN_MAXIMIZE_CHANNEL,
-  WIN_CLOSE_CHANNEL,
-  WIN_DIALOG_INFO,
-  WIN_SELECT_DIRECTORY,
+  WINDOW_MINIMIZE,
+  WINDOW_MAXIMIZE,
+  WINDOW_CLOSE,
+  WINDOW_INFO,
+  WINDOW_SELECT_DIRECTORY,
+  WINDOW_CHECK_FILE_EXISTS,
+  WINDOW_OPEN_FILE_LOCATION,
+  WIN_TOAST
 } from "./window-channels";
 
 export function exposeWindowContext() {
   const { contextBridge, ipcRenderer } = window.require("electron");
+
+  // Expose IPC renderer for toast notifications
+  contextBridge.exposeInMainWorld("electron", {
+    ipcRenderer: {
+      on: (channel: string, callback: (event: any, ...args: any[]) => void) => {
+        console.log('Setting up IPC listener for channel:', channel);
+        ipcRenderer.on(channel, callback);
+      }
+    }
+  });
+
   contextBridge.exposeInMainWorld("electronWindow", {
-    minimize: () => ipcRenderer.invoke(WIN_MINIMIZE_CHANNEL),
-    maximize: () => ipcRenderer.invoke(WIN_MAXIMIZE_CHANNEL),
-    close: () => ipcRenderer.invoke(WIN_CLOSE_CHANNEL),
-    info: (title: any, message: any) => ipcRenderer.invoke(WIN_DIALOG_INFO, { title, message }),
-    selectDirectory: (title: string, message: string) => ipcRenderer.invoke(WIN_SELECT_DIRECTORY, { title, message }),
+    minimize: () => ipcRenderer.invoke(WINDOW_MINIMIZE),
+    maximize: () => ipcRenderer.invoke(WINDOW_MAXIMIZE),
+    close: () => ipcRenderer.invoke(WINDOW_CLOSE),
+    info: (title: string, message: string) => ipcRenderer.invoke(WINDOW_INFO, { title, message }),
+    selectDirectory: (title: string, message: string) => ipcRenderer.invoke(WINDOW_SELECT_DIRECTORY, { title, message }),
+    checkFileExists: (filePath: string) => ipcRenderer.invoke(WINDOW_CHECK_FILE_EXISTS, filePath),
+    openFileLocation: (filePath: string) => ipcRenderer.invoke(WINDOW_OPEN_FILE_LOCATION, filePath),
   });
 }

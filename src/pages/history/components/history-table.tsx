@@ -12,9 +12,10 @@ interface HistoryTableProps {
     data: HistoryData[];
     onViewSerialNumbers: (item: HistoryData) => void;
     onDeleteBatch: (item: HistoryData) => void;
+    onGenerateReport: (item: HistoryData) => void;
 }
 
-export function HistoryTable({ data, onViewSerialNumbers, onDeleteBatch }: HistoryTableProps) {
+export function HistoryTable({ data, onViewSerialNumbers, onDeleteBatch, onGenerateReport }: HistoryTableProps) {
     const [searchQuery, setSearchQuery] = useState("")
     const [filteredData, setFilteredData] = useState(data)
 
@@ -95,6 +96,13 @@ export function HistoryTable({ data, onViewSerialNumbers, onDeleteBatch }: Histo
                                                 onClick={() => onViewSerialNumbers(item)}
                                             >
                                                 View Serial Numbers
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => onGenerateReport(item)}
+                                            >
+                                                {item.reportExists ? "Open Report" : "Generate Report"}
                                             </Button>
                                             <Button
                                                 size="sm"

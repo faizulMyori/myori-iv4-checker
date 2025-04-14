@@ -1,5 +1,13 @@
 export const WIN_MINIMIZE_CHANNEL = "win:minimize";
 export const WIN_MAXIMIZE_CHANNEL = "win:maximize";
 export const WIN_CLOSE_CHANNEL = "win:close";
-export const WIN_DIALOG_INFO = "win:dialog:info";
+export const WIN_DIALOG_INFO = "win-dialog-info";
 export const WIN_SELECT_DIRECTORY = "win:select:directory";
+export const WINDOW_MINIMIZE = "window:minimize";
+export const WINDOW_MAXIMIZE = "window:maximize";
+export const WINDOW_CLOSE = "window:close";
+export const WINDOW_INFO = "window:info";
+export const WINDOW_SELECT_DIRECTORY = "window:selectDirectory";
+export const WINDOW_CHECK_FILE_EXISTS = "window:checkFileExists";
+export const WINDOW_OPEN_FILE_LOCATION = "window:openFileLocation";
+export const WIN_TOAST = 'win-toast';

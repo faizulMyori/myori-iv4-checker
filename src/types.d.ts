@@ -45,6 +45,8 @@ interface ElectronWindow {
   close: () => Promise<void>;
   info: (title: any, message: any) => Promise<void>;
   selectDirectory: (title: string, message: string) => Promise<string | null>;
+  checkFileExists: (filePath: string) => Promise<boolean>;
+  openFileLocation: (filePath: string) => Promise<void>;
 }
 
 interface sqlite {

@@ -22,4 +22,5 @@ export interface HistoryData {
     labels: Label[];
     product: Product | undefined;
     totalLabels: number;
+    reportExists?: boolean;
 } 

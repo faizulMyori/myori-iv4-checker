@@ -33,7 +33,7 @@ export default function NavigationMenu() {
     <NavigationMenuBase className="px-2 font-mono text-muted-foreground">
       <NavigationMenuList>
         <NavigationMenuItem>
-          <NavigationMenuLink disabled={prodStatus === "started"} onClick={() => {
+          <NavigationMenuLink disabled={prodStatus === "started" || prodStatus === "hold"} onClick={() => {
             setActiveTab("/")
             setRoute("/")
             navigate({ to: "/" })
@@ -45,7 +45,7 @@ export default function NavigationMenu() {
           user &&
           <>
             <NavigationMenuItem>
-              <NavigationMenuLink disabled={prodStatus === "started"} onClick={() => {
+              <NavigationMenuLink disabled={prodStatus === "started" || prodStatus === "hold"} onClick={() => {
                 setActiveTab("/license");
                 setRoute("/license");
                 navigate({ to: "/license" })
@@ -54,7 +54,7 @@ export default function NavigationMenu() {
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <NavigationMenuLink disabled={prodStatus === "started"} onClick={() => {
+              <NavigationMenuLink disabled={prodStatus === "started" || prodStatus === "hold"} onClick={() => {
                 setActiveTab("/inventory");
                 setRoute("/inventory");
                 navigate({ to: "/inventory" })
@@ -63,7 +63,7 @@ export default function NavigationMenu() {
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <NavigationMenuLink disabled={prodStatus === "started"} onClick={() => {
+              <NavigationMenuLink disabled={prodStatus === "started" || prodStatus === "hold"} onClick={() => {
                 setActiveTab("/production");
                 setRoute("/production");
                 navigate({ to: "/production" })
@@ -72,7 +72,7 @@ export default function NavigationMenu() {
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <NavigationMenuLink disabled={prodStatus === "started"} onClick={() => {
+              <NavigationMenuLink disabled={prodStatus === "started" || prodStatus === "hold"} onClick={() => {
                 setActiveTab("/history");
                 setRoute("/history");
                 navigate({ to: "/history" })
@@ -81,7 +81,7 @@ export default function NavigationMenu() {
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <NavigationMenuLink disabled={prodStatus === "started"} onClick={() => {
+              <NavigationMenuLink disabled={prodStatus === "started" || prodStatus === "hold"} onClick={() => {
                 setActiveTab("/setting");
                 setRoute("/setting");
                 navigate({ to: "/setting" })
