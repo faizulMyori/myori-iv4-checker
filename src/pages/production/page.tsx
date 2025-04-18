@@ -18,6 +18,7 @@ import { useReportDownload } from "./hooks/use-report-download"
 import { ProductionProvider } from "./context/production-context"
 import { toast } from "sonner"
 import React from "react"
+import { RestartDialog } from "./components/restart-dialog"
 
 export default function ProductionPage() {
   const { prodStatus, setProdStatus, conn }: any = useContext(UserContext)
@@ -73,7 +74,7 @@ export default function ProductionPage() {
     handleDeleteEntry,
   } = useManualReject()
 
-  const { handleDownload, isSavePathModalOpen, setIsSavePathModalOpen, savePath, handleConfirmDownload } = useReportDownload(
+  const { handleDownload, isSavePathModalOpen, setIsSavePathModalOpen, savePath, handleConfirmDownload, isRestartDialogOpen, setIsRestartDialogOpen, handleRestartConfirm } = useReportDownload(
     capturedData,
     missingData,
     duplicatedData,
@@ -439,7 +440,10 @@ export default function ProductionPage() {
     isSavePathModalOpen,
     setIsSavePathModalOpen,
     savePath,
-    handleConfirmDownload
+    handleConfirmDownload,
+    isRestartDialogOpen,
+    setIsRestartDialogOpen,
+    handleRestartConfirm
   }
 
   return (
@@ -482,6 +486,11 @@ export default function ProductionPage() {
           </div>
         </div>
         <Footer />
+        <RestartDialog
+          isOpen={isRestartDialogOpen}
+          onOpenChange={setIsRestartDialogOpen}
+          onConfirm={handleRestartConfirm}
+        />
       </div>
     </ProductionProvider>
   )

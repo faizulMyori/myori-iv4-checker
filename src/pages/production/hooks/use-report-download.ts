@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { getSettings } from "@/helpers/settings_helpers"
 import { toast } from "sonner"
+import { Dialog } from "@playwright/test"
 
 export function useReportDownload(
   capturedData: any[],
@@ -16,13 +17,16 @@ export function useReportDownload(
   const [isSavePathModalOpen, setIsSavePathModalOpen] = useState(false)
   const [savePath, setSavePath] = useState("")
   const [pendingSection, setPendingSection] = useState<string | null>(null)
+  const [restart, setRestart] = useState(false)
+  const [isRestartDialogOpen, setIsRestartDialogOpen] = useState(false)
 
-  const handleDownload = async (section: string) => {
+  const handleDownload = async (section: string, isRestart?: boolean | false) => {
     try {
       const settings = await getSettings()
       setSavePath(settings.excelSavePath)
       setPendingSection(section)
       setIsSavePathModalOpen(true)
+      setRestart(isRestart || false)
     } catch (error) {
       console.error("Failed to get save path:", error)
       toast.error("Failed to get save path", {
@@ -185,6 +189,10 @@ export function useReportDownload(
       toast.success("Excel file saved successfully", {
         description: `File saved to: ${filePath}`,
       })
+
+      if (restart) {
+        setIsRestartDialogOpen(true)
+      }
     } catch (error) {
       console.error("Failed to save to Excel:", error)
       // Show error toast
@@ -197,11 +205,27 @@ export function useReportDownload(
     setPendingSection(null)
   }
 
+  const handleRestartConfirm = () => {
+    setIsRestartDialogOpen(false)
+    // Disconnect TCP/IP connection
+    window.tcpConnection.tcp_received(undefined)
+    window.tcpConnection.tcp_disconnect()
+    // Disconnect serial connection
+    window.serial.serial_com_send("@0000\r")
+    window.serial.serial_com_disconnect()
+    // Reload the application
+    window.location.reload()
+  }
+
   return {
     handleDownload,
     isSavePathModalOpen,
     setIsSavePathModalOpen,
     savePath,
-    handleConfirmDownload
+    handleConfirmDownload,
+    isRestartDialogOpen,
+    setIsRestartDialogOpen,
+    handleRestartConfirm
   }
 }
+

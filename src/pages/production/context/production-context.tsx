@@ -81,8 +81,8 @@ interface ProductionContextType {
   handleRemoveSerialNumberField: (index: number) => void
   addManualRejectEntries: () => void
   handleDeleteEntry: (id: string) => void
-  handleDownload: (type: string) => void
-  handleDeleteCapturedData: (serial: string) => Promise<void>
+  handleDownload: (section: string, isRestart?: boolean) => void
+  handleDeleteCapturedData: (serial: string) => void
   resetProduction: () => void
   startProduction: () => void
   holdProduction: () => void
@@ -96,6 +96,9 @@ interface ProductionContextType {
   setIsSavePathModalOpen: (value: boolean) => void
   savePath: string
   handleConfirmDownload: () => void
+  isRestartDialogOpen: boolean
+  setIsRestartDialogOpen: (value: boolean) => void
+  handleRestartConfirm: () => void
 }
 
 // Create the context with a default value

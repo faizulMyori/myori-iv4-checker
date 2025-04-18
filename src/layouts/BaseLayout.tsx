@@ -16,7 +16,7 @@ export default function BaseLayout({
 
   return (
     <>
-      <DragWindowRegion title="MyORI Label Checker" />
+      <DragWindowRegion title="MyORI Label Checker (IV4)" />
       <div className="flex">
         <div className="w-2/3">
           <NavigationMenu />
