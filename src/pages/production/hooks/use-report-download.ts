@@ -79,26 +79,38 @@ export function useReportDownload(
       case "captured":
         data = capturedData.filter(
           (item) =>
-            !manualRejectEntries.some((rej) => rej.serialNumber === item.serial)
+            !manualRejectEntries.some((rej) => rej.serialNumber === item.serial) &&
+            item.serial !== ""
         )
         title = "SIRIM REPORT"
         sheets.push({ title, metadata, data: mapData(data) })
         break
 
       case "manual-reject":
-        data = manualRejectEntries
+        data = manualRejectEntries.filter(
+          (item) =>
+            item.serial !== ""
+        )
         title = "MANUAL REJECT REPORT"
         sheets.push({ title, metadata, data: mapData(data) })
         break
 
       case "missing":
-        data = missingData
+        console.log('before filter', missingData)
+        data = missingData.filter(
+          (item) =>
+            item.serial !== ""
+        )
+        console.log('after filter', data)
         title = "MISSING REPORT"
         sheets.push({ title, metadata, data: mapData(data) })
         break
 
       case "duplicate":
-        data = duplicatedData
+        data = duplicatedData.filter(
+          (item) =>
+            item.serial !== ""
+        )
         title = "DUPLICATE REPORT"
         sheets.push({ title, metadata, data: mapData(data) })
         break
@@ -166,6 +178,7 @@ export function useReportDownload(
         console.error("Invalid section")
         return
     }
+
 
     // Save all the sections to Excel
     try {

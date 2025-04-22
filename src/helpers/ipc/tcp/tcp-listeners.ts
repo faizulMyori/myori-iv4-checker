@@ -8,12 +8,11 @@ import {
   TCP_SEND,
   TCP_SET_AUTO_RECONNECT
 } from "./tcp-channels";
-import { connectTcp, closeTcpConnection, sendData, setAutoReconnect } from "../../tcp_helpers";
+import { connectTcp, closeTcpConnection, setAutoReconnect } from "../../tcp_helpers";
 
 export function addTCPEventListeners() {
   ipcMain.handle(TCP_CONNECT, async (event, { ip, port }) => connectTcp(ip, port, event));
   ipcMain.handle(TCP_DISCONNECT, async () => closeTcpConnection());
-  ipcMain.handle(TCP_SEND, async (event, data) => sendData(data));
   ipcMain.handle(TCP_SET_AUTO_RECONNECT, async (event, enabled) => setAutoReconnect(enabled));
 }
 

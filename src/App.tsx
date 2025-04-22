@@ -8,6 +8,7 @@ import { router } from "./routes/router";
 import { RouterProvider } from "@tanstack/react-router";
 import { Toaster, toast } from "sonner"
 import { WIN_TOAST } from "./helpers/ipc/window/window-channels";
+import { useProductionState } from "./pages/production/hooks/use-production-state";
 
 declare global {
   interface Window {
@@ -97,6 +98,12 @@ export default function App() {
   const renderConnectionStatus = useCallback(() => {
     setConn("idle");
   }, []);
+
+  useEffect(() => {
+    if (conn === "idle" && prodStatus === "started") {
+      window.serial.serial_com_send("@0101\r");
+    }
+  }, [conn, prodStatus]);
 
   const renderConnectionConnected = useCallback(() => {
     setConn("connected");

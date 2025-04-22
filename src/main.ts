@@ -26,7 +26,7 @@ function createWindow() {
       nodeIntegrationInSubFrames: false,
       preload: preload,
     },
-    titleBarStyle: "hidden",
+    // titleBarStyle: "hidden",
   });
   registerListeners(mainWindow);
 

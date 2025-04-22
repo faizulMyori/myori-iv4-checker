@@ -1,6 +1,6 @@
 "use client"
 
-import { useContext, useState, useEffect } from "react"
+import { useContext, useState, useEffect, useCallback } from "react"
 import { UserContext } from "@/App"
 import Footer from "@/components/template/Footer"
 import ProductionControls from "./components/production-controls"
@@ -26,6 +26,18 @@ export default function ProductionPage() {
   // Initialize all the hooks and state
   const { productionStatus, setProductionStatus, startProduction, holdProduction, resumeProduction } =
     useProductionState(setProdStatus, conn)
+
+  // // Monitor TCP connection status
+  // useEffect(() => {
+  //   if (productionStatus !== "RUNNING") return;
+  //   window.tcpConnection.tcp_closed(handleTcpClosed);
+  // }, [productionStatus]);
+
+  // const handleTcpClosed = useCallback(() => {
+  //   if (productionStatus === "RUNNING") {
+  //     window.serial.serial_com_send("@0101\r");
+  //   }
+  // }, [productionStatus]);
 
   const { labelRolls, addLabelRoll, updateLabelRoll, verifyLabelRoll, calculateTotalLabels, setLabelRolls } = useLabelRolls()
 
@@ -103,13 +115,13 @@ export default function ProductionPage() {
         return
       }
 
+      const newUrl = new Date().toLocaleTimeString()
+
       // Handle case where serial or url is missing
       if (!serial || !url) {
-        setMissingData((prev) => [...prev, { serial: "", url: "", status }]);
+        setMissingData((prev) => [...prev, { serial: serial || "", url: url || "", status }]);
         return;
       }
-
-      const newUrl = new Date().toLocaleTimeString()
 
       if (status === "NG") {
         setMissingData(prevMissing => [...prevMissing, { serial, url: newUrl, status }]);
