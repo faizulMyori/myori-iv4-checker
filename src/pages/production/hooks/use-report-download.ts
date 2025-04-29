@@ -99,7 +99,7 @@ export function useReportDownload(
         console.log('before filter', missingData)
         data = missingData.filter(
           (item) =>
-            item.serial !== ""
+            item.serial !== "" && item.status === "MISSING"
         )
         console.log('after filter', data)
         title = "MISSING REPORT"

@@ -85,24 +85,40 @@ export default function Index() {
 
     const handleGenerateReport = async (item: HistoryData) => {
         try {
-            // Get save path from settings
             const settings = await getSettings()
             const savePath = JSON.parse(settings.excelSavePath)
 
-            // Generate date string in DD-MM-YYYY format
             const date = new Date()
             const day = String(date.getDate()).padStart(2, '0')
             const month = String(date.getMonth() + 1).padStart(2, '0')
             const year = date.getFullYear()
             const dateStr = `${day}-${month}-${year}`
 
-            // Create file path with both batch number and shift number
             const title = "SIRIM REPORT"
             const filePath = `${savePath}/${dateStr}-${title}-${item.batch_no}-${item.shift_number}.xlsx`
 
+            // ✨ Sort the labels by serial_number
+            const sortedLabels = [...item.labels].sort((a, b) => {
+                const matchA = a.serial_number?.match(/^([A-Za-z]+)(\d+)$/)
+                const matchB = b.serial_number?.match(/^([A-Za-z]+)(\d+)$/)
+
+                if (matchA && matchB) {
+                    const prefixA = matchA[1]
+                    const prefixB = matchB[1]
+                    const numberA = Number(matchA[2])
+                    const numberB = Number(matchB[2])
+
+                    if (prefixA !== prefixB) {
+                        return prefixA.localeCompare(prefixB)
+                    }
+                    return numberA - numberB
+                }
+                return 0
+            })
+
             // Prepare data for Excel
             const metadata = ["SIRIM SERIAL NO.", "BATCH NO", "SHIFT NO", "BRAND/TRADEMARK", "MODEL", "TYPE", "RATING", "SIZE"]
-            const data = item.labels.map(label => [
+            const data = sortedLabels.map(label => [
                 label.serial_number,
                 item.batch_no,
                 item.shift_number,
@@ -113,17 +129,14 @@ export default function Index() {
                 item.product?.size || "",
             ])
 
-            // Check if file exists
             try {
                 const fileExists = await window.electronWindow.checkFileExists(filePath)
                 if (fileExists) {
-                    // File exists, open location
                     toast.info("File already exists", {
                         description: "Opening file location...",
                     })
                     await window.electronWindow.openFileLocation(filePath)
                 } else {
-                    // File doesn't exist, generate new one
                     await window.excel.save_to_excel([{ title, metadata, data }], filePath)
                     toast.success("Excel file saved successfully", {
                         description: `File saved to: ${filePath}`,
@@ -131,18 +144,15 @@ export default function Index() {
                 }
             } catch (error) {
                 console.error("Error checking file existence:", error)
-                // If there's an error checking, try to generate the file anyway
                 await window.excel.save_to_excel([{ title, metadata, data }], filePath)
                 toast.success("Excel file saved successfully", {
                     description: `File saved to: ${filePath}`,
                 })
             }
 
-            // Double check if file still exists after opening location
             try {
                 const fileStillExists = await window.electronWindow.checkFileExists(filePath)
                 if (!fileStillExists) {
-                    // File was deleted, generate new one
                     await window.excel.save_to_excel([{ title, metadata, data }], filePath)
                     toast.success("Excel file regenerated successfully", {
                         description: `File was regenerated at: ${filePath}`,
@@ -150,14 +160,12 @@ export default function Index() {
                 }
             } catch (error) {
                 console.error("Error verifying file after opening:", error)
-                // If there's an error checking, try to generate the file anyway
                 await window.excel.save_to_excel([{ title, metadata, data }], filePath)
                 toast.success("Excel file regenerated successfully", {
                     description: `File was regenerated at: ${filePath}`,
                 })
             }
 
-            // Refresh the data to update report existence status
             await fetchBatchHistories()
         } catch (error) {
             console.error("Error generating report:", error)

@@ -106,20 +106,75 @@ export default function ProductionPage() {
 
     const handleTcpData = async (data: any) => {
       const [serial, url, status] = data.split(",").map((data: string) => data.trim())
-      console.log("Received Data:", data)
+      console.log("Received Data:", labelRolls)
 
       if (productionStatus !== "RUNNING") return
+
+      const newUrl = new Date().toLocaleTimeString()
+
+      setCapturedData((prevData) => {
+        if (prevData.length > 0) {
+          const lastEntry = prevData[prevData.length - 1]
+          const match = lastEntry.serial.match(/^([A-Za-z]+)(\d+)$/)
+
+          if (match) {
+            const prefix = match[1]
+            const lastSerialNum = Number.parseInt(match[2], 10)
+            const numLength = match[2].length
+
+            const currentMatch = serial.match(/^([A-Za-z]+)(\d+)$/)
+            if (currentMatch) {
+              const currentPrefix = currentMatch[1]
+              const currentSerialNum = Number.parseInt(currentMatch[2], 10)
+
+              // 🛑 Find matching rollInfo by prefix
+              const matchedRoll = labelRolls.find(info => {
+                const startPrefix = info.startNumber.match(/^([A-Za-z]+)/)?.[1]
+                return startPrefix === currentPrefix
+              })
+
+              if (matchedRoll) {
+                const endMatch = matchedRoll.endNumber.match(/^([A-Za-z]+)(\d+)$/)
+                if (endMatch) {
+                  const endSerialNum = Number.parseInt(endMatch[2], 10)
+
+                  // 🔥 Check OOR
+                  if (currentSerialNum > endSerialNum) {
+                    // setMissingData((prevMissing) => [
+                    //   ...prevMissing,
+                    //   { serial, url: newUrl, status: "OOR" },
+                    // ])
+                  }
+                  // 🔥 Normal missing
+                  else if (currentSerialNum > lastSerialNum + 1) {
+                    for (let i = lastSerialNum + 1; i < currentSerialNum; i++) {
+                      const skippedSerial = `${prefix}${String(i).padStart(numLength, "0")}`
+                      setMissingData((prevMissing) => [
+                        ...prevMissing,
+                        { serial: skippedSerial, url: newUrl, status: "MISSING" },
+                      ])
+                    }
+                  }
+                }
+              } else {
+                // 🛑 If no matching roll found, you can optionally handle it here
+                console.warn('No matching rollInfo for serial prefix:', currentPrefix)
+              }
+            }
+          }
+        }
+
+        return prevData
+      })
 
       if (!status) {
         setMissingData((prevMissing) => [...prevMissing, { serial, url: "", status: "(UNKNOWN)" }])
         return
       }
 
-      const newUrl = new Date().toLocaleTimeString()
-
       // Handle case where serial or url is missing
       if (!serial || !url) {
-        setMissingData((prev) => [...prev, { serial: serial || "", url: url || "", status }]);
+        setMissingData((prev) => [...prev, { serial: serial || "", url: newUrl || "", status }]);
         return;
       }
 
@@ -152,6 +207,9 @@ export default function ProductionPage() {
         const newEntry = { serial, url: newUrl, status: status + " - (INVALID)" }
 
         setMissingData((prevMissing) => {
+          // if (prevMissing.some((entry) => entry.serial === newEntry.serial && entry.status === 'OOR')) {
+          //   return prevMissing
+          // }
           const newMissing = [...prevMissing, newEntry]
           return newMissing
         })
@@ -199,7 +257,32 @@ export default function ProductionPage() {
           toast.error(`Error saving serial ${serial} to database`)
         }
 
-        setCapturedData((prevData) => [...prevData, { serial, url: newUrl, status }])
+        setCapturedData((prevData) => {
+          // Step 1: Create new array with new item
+          const newData = [...prevData, { serial, url: newUrl, status }]
+          setMissingData((prevMissing) => prevMissing.filter((item) => item.serial !== serial))
+          // Step 2: Sort by serial number
+          newData.sort((a, b) => {
+            const matchA = a.serial.match(/^([A-Za-z]+)(\d+)$/)
+            const matchB = b.serial.match(/^([A-Za-z]+)(\d+)$/)
+
+            if (matchA && matchB) {
+              const prefixA = matchA[1]
+              const prefixB = matchB[1]
+              const numberA = Number(matchA[2])
+              const numberB = Number(matchB[2])
+
+              if (prefixA !== prefixB) {
+                return prefixA.localeCompare(prefixB)
+              }
+              return numberA - numberB
+            }
+
+            return 0 // if match failed, keep original order
+          })
+
+          return newData
+        })
       }
     }
 
