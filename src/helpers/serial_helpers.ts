@@ -4,7 +4,7 @@ import { requestOCRData } from "./tcp_helpers";
 const { SerialPort } = require("serialport");
 
 let serial: any = null;
-let currentPortPath: string | null = null;
+let currentPortPath: string = '';
 let heartbeatInterval: NodeJS.Timeout | null = null;
 
 export async function openSerialPort(port: string, event: any): Promise<string> {
@@ -20,7 +20,7 @@ export async function openSerialPort(port: string, event: any): Promise<string> 
         serial.on("open", () => {
             console.log(`Connected to serial port: ${port}`);
             attachSerialListeners(event);
-            startHeartbeat();
+            startHeartbeat(event);
             pollDCON(event);
             resolve('Connected successfully');
         });
@@ -107,18 +107,18 @@ export async function listSerialPorts() {
     return SerialPort.list();
 }
 
-function startHeartbeat() {
+function startHeartbeat(event:any) {
     if (heartbeatInterval) return;
 
     heartbeatInterval = setInterval(() => {
         if (serial && serial.isOpen) {
-            sendDconCommand('@0100\r')
+            sendDconCommand('@01\r\n')
                 .then(response => {
                     console.log('Heartbeat:', response.trim());
                 })
                 .catch(err => {
                     console.error('Heartbeat error:', err.message);
-                    attemptReconnect();
+                    attemptReconnect(event);
                 });
         }
     }, 5000);
