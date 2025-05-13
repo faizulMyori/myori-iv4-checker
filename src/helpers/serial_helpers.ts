@@ -7,7 +7,7 @@ let serial: any = null;
 let currentPortPath: string = '';
 let heartbeatInterval: NodeJS.Timeout | null = null;
 
-export async function openSerialPort(port: string): Promise<string> {
+export async function openSerialPort(port: string, event: any): Promise<string> {
     return new Promise(async (resolve, reject) => {
         // If a serial port is already open, close it first
         if (serial && serial.isOpen) {
