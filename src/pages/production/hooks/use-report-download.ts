@@ -223,9 +223,7 @@ export function useReportDownload(
     // Disconnect TCP/IP connection
     window.tcpConnection.tcp_received(undefined)
     window.tcpConnection.tcp_disconnect()
-    // Disconnect serial connection
-    window.serial.serial_com_send("@0000\r")
-    window.serial.serial_com_disconnect()
+
     // Reload the application
     window.location.reload()
   }
