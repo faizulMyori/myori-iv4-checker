@@ -8,6 +8,7 @@ import {
 import {
   initializeDatabase,
 } from "./helpers/db_helpers";
+import { closeSerialPort } from "./helpers/serial_helpers";
 
 
 const logFilePath = path.join(app.getPath('userData'), 'logs', 'app.log');
@@ -33,6 +34,33 @@ function createWindow() {
     titleBarStyle: "hidden",
   });
   registerListeners(mainWindow);
+
+  mainWindow.on("close", async (event) => {
+    event.preventDefault();
+
+    const response = await dialog.showMessageBox(mainWindow, {
+      type: "question",
+      buttons: ["Cancel", "Exit"],
+      defaultId: 1,
+      cancelId: 0,
+      title: "Confirm Exit",
+      message: "Sure to exit?"
+    })
+
+    if (response.response === 1) {
+      try {
+        const result = await closeSerialPort();
+        console.log(result)
+      } catch (err) {
+        console.log(err)
+      } finally {
+        mainWindow.removeAllListeners("close")
+        mainWindow.close()
+        app.quit()
+      }
+      
+    }
+  })
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
