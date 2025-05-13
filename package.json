@@ -41,11 +41,13 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.6.1",
+    "@types/bcrypt": "^5.0.2",
     "@types/electron-squirrel-startup": "^1.0.2",
     "@types/eslint-config-prettier": "^6.11.3",
     "@types/node": "^22.13.0",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
+    "@types/winston": "^2.4.4",
     "electron": "34.0.2",
     "electron-devtools-installer": "^4.0.0",
     "electron-playwright-helpers": "^1.7.1",
@@ -107,6 +109,7 @@
     "sqlite-electron": "^3.2.0",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
+    "winston": "^3.17.0",
     "xlsx": "^0.18.5",
     "zod": "^3.24.1"
   }
