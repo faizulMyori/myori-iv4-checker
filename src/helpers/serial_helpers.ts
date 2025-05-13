@@ -7,8 +7,19 @@ let serial: any = null;
 let currentPortPath: string = '';
 let heartbeatInterval: NodeJS.Timeout | null = null;
 
-export async function openSerialPort(port: string, event: any): Promise<string> {
-    return new Promise((resolve, reject) => {
+export async function openSerialPort(port: string): Promise<string> {
+    return new Promise(async (resolve, reject) => {
+        // If a serial port is already open, close it first
+        if (serial && serial.isOpen) {
+            try {
+                await closeSerialPort(); // Force close existing connection
+                console.log("Existing serial port closed before reconnecting");
+            } catch (err: any) {
+                console.error("Error closing existing serial port:", err.message);
+                // Continue to attempt reconnect anyway
+            }
+        }
+
         currentPortPath = port;
         serial = new SerialPort({ path: port, baudRate: 9600 });
 
@@ -107,7 +118,7 @@ export async function listSerialPorts() {
     return SerialPort.list();
 }
 
-function startHeartbeat(event:any) {
+function startHeartbeat(event: any) {
     if (heartbeatInterval) return;
 
     heartbeatInterval = setInterval(() => {

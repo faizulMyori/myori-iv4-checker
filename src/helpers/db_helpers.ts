@@ -14,6 +14,8 @@ export async function initializeDatabase() {
     initializeConnectionsDatabase();
     initializeLicensesDatabase();
     initializeStorageTable();
+    executeQuery("PRAGMA journal_mode=WAL");
+    executeQuery("PRAGMA synchronous=NORMAL");
     console.log("Database initialized successfully");
   } catch (error) {
     console.error("Failed to initialize database", error);

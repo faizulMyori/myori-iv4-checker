@@ -147,6 +147,7 @@ export default function ProductionPage() {
                   }
                   // 🔥 Normal missing
                   else if (currentSerialNum > lastSerialNum + 1) {
+                    window.serial.serial_com_send("@0101\r");
                     for (let i = lastSerialNum + 1; i < currentSerialNum; i++) {
                       const skippedSerial = `${prefix}${String(i).padStart(numLength, "0")}`
                       setMissingData((prevMissing) => [
@@ -232,7 +233,7 @@ export default function ProductionPage() {
           return prevDuplicates
         })
 
-        window.serial.serial_com_send("@0101\r")
+        window.serial.serial_com_send("@0102\r")
         return
       } else if (alreadyCaptured && !checkDuplicates) {
         return
@@ -244,18 +245,12 @@ export default function ProductionPage() {
         removeFromUnusedSerials(serial)
 
         // Insert into database immediately
-        try {
-          await window.sqlite.create_label({
-            batch_id: batchID,
-            serial: serial,
-            qr_code: newUrl,
-            status: status,
-          })
-          console.log(`Serial ${serial} saved to database`)
-        } catch (error) {
-          console.error(`Error saving serial ${serial} to database:`, error)
-          toast.error(`Error saving serial ${serial} to database`)
-        }
+        window.sqlite.create_label({
+          batch_id: batchID,
+          serial: serial,
+          qr_code: newUrl,
+          status: status,
+        })
 
         setCapturedData((prevData) => {
           // Step 1: Create new array with new item

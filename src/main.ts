@@ -9,6 +9,10 @@ import {
   initializeDatabase,
 } from "./helpers/db_helpers";
 
+
+const logFilePath = path.join(app.getPath('userData'), 'logs', 'app.log');
+console.log('Log file path:', logFilePath); // visible in terminal
+
 const inDevelopment = process.env.NODE_ENV === "development";
 
 function createWindow() {

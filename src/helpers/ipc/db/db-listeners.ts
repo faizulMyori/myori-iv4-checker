@@ -233,13 +233,49 @@ export function addDBEventListeners() {
     }
   });
 
-  // labels
-  ipcMain.handle(DB_CREATE_LABEL, async (event, data) => {
-    try {
-      return await executeQuery("INSERT INTO labels (serial, qr_code, status, batch_id) VALUES (?, ?, ?, ?)", [data.serial, data.qr_code, data.status, data.batch_id]);
-    } catch (error) {
-      return false;
+  const batchQueue: any = [];
+  const BATCH_SIZE = 20;
+  const BATCH_INTERVAL = 100; // ms
+  // Timer to flush queue periodically
+  setInterval(() => {
+    if (batchQueue.length > 0) {
+      flushBatch();
     }
+  }, BATCH_INTERVAL);
+
+  function flushBatch() {
+    if (batchQueue.length === 0) return;
+
+    const batch = batchQueue.splice(0, BATCH_SIZE);
+
+    const valuesClause = batch.map(() => "(?, ?, ?, ?)").join(", ");
+    const params = batch.flatMap(({ data }: any) => [
+      data.serial,
+      data.qr_code,
+      data.status,
+      data.batch_id,
+    ]);
+
+    const query = `INSERT INTO labels (serial, qr_code, status, batch_id) VALUES ${valuesClause}`;
+
+    executeQuery(query, params)
+      .then(result => {
+        batch.forEach(({ resolve }: any) => resolve(result));
+      })
+      .catch((err: any) => {
+        batch.forEach(({ reject }: any) => reject(err));
+      });
+  }
+
+  // Handler
+  ipcMain.handle(DB_CREATE_LABEL, async (event, data) => {
+    return new Promise((resolve, reject) => {
+      batchQueue.push({ data, resolve, reject });
+      // Optional: flush immediately if batch size is reached
+      if (batchQueue.length >= BATCH_SIZE) {
+        flushBatch();
+      }
+    });
   });
 
   ipcMain.handle(DB_GET_LABELS, async (event, data) => {
