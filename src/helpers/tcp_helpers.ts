@@ -53,7 +53,7 @@ export async function connectTcp(ip: string, port: number, event: any) {
                 try {
                     const dataString = data.toString().trim();
 
-                    if (dataString.startsWith('ER,') || dataString.startsWith('PING')) return;
+                    if (dataString.startsWith('ER,') || dataString.startsWith('PING') || dataString.startsWith('RT')) return;
                     console.log(`Received: ${dataString}`);
 
                     if (dataString.split(',').find((d: any) => d === 'OK')) {
@@ -198,7 +198,7 @@ export function sendIV4Command(command: string, event: any) {
             return;
         }
 
-        console.log(`Sending command to IV4: ${command}`);
+        // console.log(`Sending command to IV4: ${command}`);
         client.write(command + '\r\n', 'utf-8', (err) => {
             if (err) {
                 reject(`Error sending command: ${err.message}`);
@@ -224,7 +224,7 @@ export async function requestOCRData(event: any) {
     try {
         const response: any = await sendIV4Command("RT", event);
 
-        return console.log(`OCR Data Requested: ${response}`);
+        return;
     } catch (error) {
         return console.error(error);
     }
