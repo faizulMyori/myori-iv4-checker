@@ -233,7 +233,7 @@ export default function ProductionPage() {
           return prevDuplicates
         })
 
-        window.serial.serial_com_send("@0102\r")
+        window.serial.serial_com_send("@0101\r")
         return
       } else if (alreadyCaptured && !checkDuplicates) {
         return

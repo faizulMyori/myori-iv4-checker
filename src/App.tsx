@@ -101,7 +101,7 @@ export default function App() {
 
   useEffect(() => {
     if (conn === "idle" && prodStatus === "started") {
-      window.serial.serial_com_send("@0101\r");
+      window.serial.serial_com_send("@0102\r");
     }
   }, [conn, prodStatus]);
 
