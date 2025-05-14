@@ -7,6 +7,7 @@ import {
 } from "../helpers/ipc/tcp/tcp-channels";
 import { ipcMain } from 'electron';
 import { WIN_DIALOG_INFO } from './ipc/window/window-channels';
+import { sendSerialData } from './serial_helpers';
 
 let client: net.Socket | null = null;
 let reconnectAttempts = 0;
@@ -129,7 +130,7 @@ function attemptReconnect(ip: string, port: number, event: any) {
 
     // reconnectAttempts++;
     console.log(`Reconnecting in ${RECONNECT_DELAY / 1000} seconds...`);
-
+    sendSerialData('@0102\r')
     setTimeout(() => {
         connectTcp(ip, port, event)
             .then(() => console.log('Reconnected successfully'))
