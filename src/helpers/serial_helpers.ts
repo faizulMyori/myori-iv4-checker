@@ -1,5 +1,5 @@
 import { TCP_RECEIVE } from "./ipc/tcp/tcp-channels";
-import { requestOCRData } from "./tcp_helpers";
+import { requestOCRData, setOCRDetailedOutput } from "./tcp_helpers";
 
 const { SerialPort } = require("serialport");
 
@@ -50,7 +50,9 @@ function pollDCON(event: any) {
         serial.once('data', (data: any) => {
             const response = data.toString('ascii');
             if (response.includes('1')) {
-                requestOCRData(event);
+                setOCRDetailedOutput(event).then(() => {
+                    requestOCRData(event);
+                });
             }
             pollDCON(event); // Recursive polling
         });
