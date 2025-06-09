@@ -4,17 +4,20 @@ import { useState, useEffect } from "react"
 
 export function useProductionState(setProdStatus: any, conn: string) {
   const [productionStatus, setProductionStatus] = useState<"IDLE" | "RUNNING" | "STOPPED" | "HOLD">("IDLE")
+  const [userHold, setUserHold] = useState(false)
 
   // Start production
   const startProduction = () => {
     setProdStatus("started")
     setProductionStatus("RUNNING")
+    setUserHold(false)
   }
 
   // Hold production
   const holdProduction = () => {
     setProdStatus("hold")
     setProductionStatus("HOLD")
+    setUserHold(true)
   }
 
   // Resume production from hold
@@ -25,6 +28,7 @@ export function useProductionState(setProdStatus: any, conn: string) {
     } else {
       setProdStatus("started")
       setProductionStatus("RUNNING")
+      setUserHold(false)
     }
   }
 
@@ -32,6 +36,7 @@ export function useProductionState(setProdStatus: any, conn: string) {
   const stopProduction = () => {
     setProdStatus("stopped")
     setProductionStatus("STOPPED")
+    setUserHold(false)
   }
 
   // Monitor connection status
@@ -39,8 +44,12 @@ export function useProductionState(setProdStatus: any, conn: string) {
     if (conn !== "connected" && productionStatus === "RUNNING") {
       setProdStatus("hold")
       setProductionStatus("HOLD")
+      setUserHold(false) // system hold
+    } else if (conn === "connected" && productionStatus === "HOLD" && !userHold) {
+      setProdStatus("RUNNING")
+      setProductionStatus("RUNNING")
     }
-  }, [conn, productionStatus, setProdStatus])
+  }, [conn, productionStatus, setProdStatus, userHold])
 
   return {
     productionStatus,
@@ -51,4 +60,3 @@ export function useProductionState(setProdStatus: any, conn: string) {
     stopProduction,
   }
 }
-

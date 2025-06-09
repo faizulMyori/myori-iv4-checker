@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import React from "react"
+import { FixedSizeList as List } from "react-window"
+import AutoSizer from "react-virtualized-auto-sizer" // Optional for responsive sizing
 
 export default function CapturedData() {
   const { capturedData, handleDownload, labelRolls, batchNo, productData, setCapturedData, unusedSerials, removeFromUnusedSerials, addToUnusedSerials, handleDeleteCapturedData } = useProduction()
@@ -210,24 +212,47 @@ export default function CapturedData() {
           </TooltipProvider>
         </div>
       </CardHeader>
-      <CardContent className="h-[200px] overflow-y-auto">
-        {[...capturedData].reverse().map((item: any, index: number) => (
-          <div key={index} className="text-sm flex justify-between items-center">
-            <span>{`${item.serial}, ${item.url}, ${item.status}`}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2"
-              onClick={() => handleDeleteEntry(index)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-        {capturedData.length === 0 && (
+      <CardContent className="h-[200px] p-0">
+        {capturedData.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">No captured serial numbers</div>
+        ) : (
+          <AutoSizer>
+            {({ height, width }) => (
+              <List
+                height={200}
+                width={width}
+                itemCount={capturedData.length}
+                itemSize={40}
+                itemData={capturedData}
+              >
+                {({ index, style, data }) => {
+                  const actualIndex = data.length - 1 - index
+                  const item = data[actualIndex]
+
+                  return (
+                    <div
+                      key={actualIndex}
+                      style={style}
+                      className="text-sm flex justify-between items-center px-4"
+                    >
+                      <span>{`${item.serial}, ${item.url}, ${item.status}`}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => handleDeleteEntry(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )
+                }}
+              </List>
+            )}
+          </AutoSizer>
         )}
       </CardContent>
+
 
       <Dialog open={deleteEntry !== null} onOpenChange={() => setDeleteEntry(null)}>
         <DialogContent>

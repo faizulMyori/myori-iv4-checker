@@ -99,11 +99,11 @@ export default function App() {
     setConn("idle");
   }, []);
 
-  useEffect(() => {
-    if (conn === "idle" && prodStatus === "started") {
-      window.serial.serial_com_send("@0102\r");
-    }
-  }, [conn, prodStatus]);
+  // useEffect(() => {
+  //   if (conn === "idle" && prodStatus === "started") {
+  //     window.serial.serial_com_send("@0102\r");
+  //   }
+  // }, [conn, prodStatus]);
 
   const renderConnectionConnected = useCallback(() => {
     setConn("connected");

@@ -221,8 +221,8 @@ export function useReportDownload(
   const handleRestartConfirm = () => {
     setIsRestartDialogOpen(false)
     // Disconnect TCP/IP connection
-    window.tcpConnection.tcp_received(undefined)
-    window.tcpConnection.tcp_disconnect()
+    // window.tcpConnection.tcp_received(undefined)
+    // window.tcpConnection.tcp_disconnect()
 
     // Reload the application
     window.location.reload()

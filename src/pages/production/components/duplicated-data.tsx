@@ -14,9 +14,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { FixedSizeList as List } from "react-window"
+import AutoSizer from "react-virtualized-auto-sizer"
 
 export default function DuplicatedData() {
-  const { duplicatedData, handleDownload, handleRemoveDuplicatedEntry, capturedData } = useProduction()
+  const {
+    duplicatedData,
+    handleDownload,
+    handleRemoveDuplicatedEntry,
+    capturedData,
+  } = useProduction()
+
   const [deleteSerial, setDeleteSerial] = React.useState<string | null>(null)
 
   const handleRemove = (serial: string) => {
@@ -27,20 +35,39 @@ export default function DuplicatedData() {
     if (deleteSerial) {
       handleRemoveDuplicatedEntry(deleteSerial)
 
-      // Check if the serial is in captured data
       const isInCapturedData = capturedData.some((item: any) => item.serial === deleteSerial)
 
-      if (isInCapturedData) {
-        toast.success("Serial number removed", {
-          description: `${deleteSerial} has been removed from duplicated data.`,
-        })
-      } else {
-        toast.success("Serial number returned", {
-          description: `${deleteSerial} has been removed from duplicated data and returned to unused serials.`,
-        })
-      }
+      toast.success("Serial number removed", {
+        description: isInCapturedData
+          ? `${deleteSerial} has been removed from duplicated data.`
+          : `${deleteSerial} has been removed from duplicated data and returned to unused serials.`,
+      })
+
       setDeleteSerial(null)
     }
+  }
+
+  const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+    const item = [...duplicatedData].reverse()[index]
+
+    return (
+      <div
+        style={style}
+        className="text-sm text-red-500 flex justify-between items-center p-1 hover:bg-muted/30 rounded"
+      >
+        <span>{`${item.serial}, ${item.url}, ${item.status}`}</span>
+        <Button
+          variant="destructive"
+          size="sm"
+          className="h-7 px-2 ml-2"
+          onClick={() => handleRemove(item.serial)}
+          title="Remove from duplicated data"
+        >
+          <Trash2 className="h-4 w-4 mr-1" />
+          Remove
+        </Button>
+      </div>
+    )
   }
 
   return (
@@ -54,27 +81,22 @@ export default function DuplicatedData() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="h-[200px] overflow-y-auto">
-        {[...duplicatedData].reverse().map((item: any, index: number) => (
-          <div
-            key={index}
-            className="text-sm text-red-500 flex justify-between items-center mb-2 p-1 hover:bg-muted/30 rounded"
-          >
-            <span>{`${item.serial}, ${item.url}, ${item.status}`}</span>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-7 px-2 ml-2"
-              onClick={() => handleRemove(item.serial)}
-              title="Remove from duplicated data"
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Remove
-            </Button>
-          </div>
-        ))}
-        {duplicatedData.length === 0 && (
+      <CardContent className="h-[200px] p-0">
+        {duplicatedData.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">No duplicated serial numbers</div>
+        ) : (
+          <AutoSizer>
+            {({ height, width }) => (
+              <List
+                height={200}
+                width={width}
+                itemCount={duplicatedData.length}
+                itemSize={42}
+              >
+                {Row}
+              </List>
+            )}
+          </AutoSizer>
         )}
       </CardContent>
 
@@ -99,4 +121,3 @@ export default function DuplicatedData() {
     </Card>
   )
 }
-

@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useProduction } from "../context/production-context"
 import React from "react"
+import { FixedSizeList as List } from "react-window"
+import AutoSizer from "react-virtualized-auto-sizer"
 
 export default function ManualRejectData() {
   const {
@@ -30,6 +32,7 @@ export default function ManualRejectData() {
     handleDeleteEntry,
     handleDownload,
   } = useProduction()
+
   const [deleteEntryId, setDeleteEntryId] = React.useState<string | null>(null)
   const [deleteEntrySerial, setDeleteEntrySerial] = React.useState<string | null>(null)
 
@@ -46,6 +49,26 @@ export default function ManualRejectData() {
     }
   }
 
+  const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+    const entry = [...manualRejectEntries].reverse()[index]
+
+    return (
+      <div
+        style={style}
+        className="flex items-center justify-between text-sm px-2 hover:bg-muted/30"
+      >
+        <span>{entry.serialNumber}</span>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => handleDelete(entry.id, entry.serialNumber)}
+        >
+          Remove
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <Card className="col-span-4">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -57,17 +80,27 @@ export default function ManualRejectData() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="h-[200px] overflow-y-auto">
-        <div className="space-y-2">
-          {[...manualRejectEntries].reverse().map((entry: any) => (
-            <div key={entry.id} className="flex items-center justify-between text-sm">
-              <span>{entry.serialNumber}</span>
-              <Button variant="destructive" size="sm" onClick={() => handleDelete(entry.id, entry.serialNumber)} className="ml-2">
-                Remove
-              </Button>
-            </div>
-          ))}
-        </div>
+      <CardContent className="h-[200px] p-0">
+        {manualRejectEntries.length === 0 ? (
+          <div className="text-center text-muted-foreground py-8">
+            No manual reject serial numbers
+          </div>
+        ) : (
+          <AutoSizer>
+            {({ height, width }) => (
+              <List
+                height={200}
+                width={width}
+                itemCount={manualRejectEntries.length}
+                itemSize={42}
+              >
+                {Row}
+              </List>
+            )}
+          </AutoSizer>
+        )}
+
+        {/* ADD ENTRY DIALOG */}
         <Dialog open={isManualRejectModalOpen} onOpenChange={setIsManualRejectModalOpen}>
           <DialogTrigger asChild>
             <Button variant="secondary" size="sm" className="mt-4">
@@ -77,7 +110,9 @@ export default function ManualRejectData() {
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Add Manual Reject Entries</DialogTitle>
-              <DialogDescription>Enter the serial numbers for the manual reject entries.</DialogDescription>
+              <DialogDescription>
+                Enter the serial numbers for the manual reject entries.
+              </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               {newSerialNumbers.map((serialNumber: any, index: any) => (
@@ -114,6 +149,7 @@ export default function ManualRejectData() {
           </DialogContent>
         </Dialog>
 
+        {/* CONFIRM DELETE DIALOG */}
         <Dialog open={deleteEntryId !== null} onOpenChange={() => setDeleteEntryId(null)}>
           <DialogContent>
             <DialogHeader>
@@ -136,4 +172,3 @@ export default function ManualRejectData() {
     </Card>
   )
 }
-

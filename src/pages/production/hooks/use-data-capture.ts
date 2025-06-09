@@ -127,7 +127,10 @@ export function useDataCapture(productionStatus: string, labelRolls: LabelRoll[]
             return prevDuplicates
           })
 
-          window.serial.serial_com_send("@0101\r")
+          window.serial.serial_com_send("@0101\r");
+          setTimeout(() => {
+            window.serial.serial_com_send("@0100\r");
+          }, 100);
           return prevData
         }
 

@@ -14,6 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { FixedSizeList as List } from "react-window"
+import AutoSizer from "react-virtualized-auto-sizer"
 
 export default function MissingData() {
   const { missingData, handleDownload, handleRemoveMissingEntry } = useProduction()
@@ -27,13 +29,37 @@ export default function MissingData() {
 
   const confirmDelete = () => {
     if (deleteIndex !== null) {
-      handleRemoveMissingEntry(deleteIndex)
+      handleRemoveMissingEntry(missingData.length - 1 - deleteIndex) // Adjust index since reversed
       toast.success("Serial number removed", {
         description: `${deleteSerial} has been removed from missing data.`,
       })
       setDeleteIndex(null)
       setDeleteSerial(null)
     }
+  }
+
+  const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+    const item = [...missingData].reverse()[index]
+
+    return (
+      <div
+        key={index}
+        style={style}
+        className="text-sm text-red-500 flex justify-between items-center p-1 hover:bg-muted/30 rounded"
+      >
+        <span>{`${item.serial}, ${item.url}, ${item.status}`}</span>
+        <Button
+          variant="destructive"
+          size="sm"
+          className="h-7 px-2 ml-2"
+          onClick={() => handleRemove(index, item.serial)}
+          title="Remove from missing data"
+        >
+          <Trash2 className="h-4 w-4 mr-1" />
+          Remove
+        </Button>
+      </div>
+    )
   }
 
   return (
@@ -47,27 +73,22 @@ export default function MissingData() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="h-[200px] overflow-y-auto">
-        {[...missingData].reverse().map((item: any, index: number) => (
-          <div
-            key={index}
-            className="text-sm text-red-500 flex justify-between items-center mb-2 p-1 hover:bg-muted/30 rounded"
-          >
-            <span>{`${item.serial}, ${item.url}, ${item.status}`}</span>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-7 px-2 ml-2"
-              onClick={() => handleRemove(index, item.serial)}
-              title="Remove from missing data"
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Remove
-            </Button>
-          </div>
-        ))}
-        {missingData.length === 0 && (
+      <CardContent className="h-[200px] p-0">
+        {missingData.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">No missing serial numbers</div>
+        ) : (
+          <AutoSizer>
+            {({ height, width }) => (
+              <List
+                height={200}
+                width={width}
+                itemCount={missingData.length}
+                itemSize={42}
+              >
+                {Row}
+              </List>
+            )}
+          </AutoSizer>
         )}
       </CardContent>
 
@@ -92,4 +113,3 @@ export default function MissingData() {
     </Card>
   )
 }
-

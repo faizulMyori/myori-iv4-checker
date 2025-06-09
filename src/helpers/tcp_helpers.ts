@@ -6,7 +6,8 @@ import {
     TCP_RECEIVE
 } from "../helpers/ipc/tcp/tcp-channels";
 import { ipcMain } from 'electron';
-import { WIN_DIALOG_INFO } from './ipc/window/window-channels';
+import { WIN_TOAST } from './ipc/window/window-channels';
+import logger from '../utils/logger';
 import { sendSerialData } from './serial_helpers';
 
 let client: net.Socket | null = null;
@@ -48,30 +49,29 @@ export async function connectTcp(ip: string, port: number, event: any) {
             event.sender.send(TCP_CONNECTED);
             client?.removeAllListeners(); // Remove all previous listeners
             setInterval(keepAlive, 10000); // Send keep-alive packets every 30 seconds
+            sendSerialData('@0100\r')
+            client?.write('OE,1<CR>')
+            client?.write('OF,01<CR>')
             // Listen for incoming data
             client?.on('data', (data: Buffer) => {
                 try {
                     const dataString = data.toString().trim();
+                    if (dataString.startsWith('ER,') || dataString.startsWith('PING')) return;
 
-                    if (dataString.startsWith('ER,') || dataString.startsWith('PING') || dataString.trim() === 'RT') return;
-                    console.log(`Received: ${dataString}`);
+                    const parts = dataString.split(',');
+                    const [statusRaw, date, serial] = parts.slice(-3);
+                    const status = statusRaw === 'OK' ? 'OK' : 'NG';
 
-                    if (dataString.split(',').find((d: any) => d === 'OK')) {
-                        let status = dataString.split(',')[7]
-                        let url = dataString.split(',')[8]
-                        let serial = dataString.split(',')[9]
-                        let tcp_data = `${serial},${url},${status}`
-                        console.log(tcp_data)
-                        event.sender.send(TCP_RECEIVE, tcp_data);
-                    } else {
-                        event.sender.send(TCP_RECEIVE, `,,NG`);
-                    }
+                    const output = [serial, date, status].join(',');
+
+                    console.log(`Received: ${output}`);
+                    logger.info(`Received: ${output}`);
+                    event.sender.send(TCP_RECEIVE, output);
                 } catch (parseError: any) {
                     event.sender.send(TCP_ERROR, parseError.message);
                 }
             });
 
-            // Handle connection close (Trigger reconnection)
             // Handle connection close (Trigger reconnection)
             client?.on('close', () => {
                 console.log('TCP connection closed');
@@ -131,10 +131,11 @@ function attemptReconnect(ip: string, port: number, event: any) {
     // reconnectAttempts++;
     console.log(`Reconnecting in ${RECONNECT_DELAY / 1000} seconds...`);
     sendSerialData('@0102\r')
+
     setTimeout(() => {
         connectTcp(ip, port, event)
             .then(() => console.log('Reconnected successfully'))
-            .catch((err) => console.error(`Reconnect failed: ${err}`));
+            .catch((err) => attemptReconnect(ip, port, event));
     }, RECONNECT_DELAY);
 }
 
@@ -152,80 +153,40 @@ export function closeTcpConnection() {
     });
 }
 
-export function sendData(cmd: string) {
-    //0 = RESET
-    //1 = DO0
-    //2 = DO1
-    //3 = DO0 & DO1
-    //4 = DO2
-    //5 = DO0 & DO2
-    //6 = DO1 & DO2
-    //7 = DO0 & DO1 & DO2
-    //8 = DO3
-    //9 = DO0 & DO3
-    //10 = DO4
-    console.log(cmd)
-    sendDconCommand(cmd)
-        .then((response) => {
-            // if (cmd !== '@0100\r') sendData('@0100\r')
-            console.log('Response:', response);
-        })
-        .catch((err) => {
-            console.error('Error:', err);
-        });
-}
+// export function sendData(cmd: string) {
+//     //0 = RESET
+//     //1 = DO0
+//     //2 = DO1
+//     //3 = DO0 & DO1
+//     //4 = DO2
+//     //5 = DO0 & DO2
+//     //6 = DO1 & DO2
+//     //7 = DO0 & DO1 & DO2
+//     //8 = DO3
+//     //9 = DO0 & DO3
+//     //10 = DO4
+//     console.log(cmd)
+//     sendDconCommand(cmd)
+//         .then((response) => {
+//             // if (cmd !== '@0100\r') sendData('@0100\r')
+//             console.log('Response:', response);
+//         })
+//         .catch((err) => {
+//             console.error('Error:', err);
+//         });
+// }
 
-function sendDconCommand(command: string) {
-    return new Promise((resolve, reject) => {
-        // write to dcon rs485
+// function sendDconCommand(command: string) {
+//     return new Promise((resolve, reject) => {
+//         // write to dcon rs485
 
-        client?.write(command, 'ascii', (err: any) => {
-            if (err) {
-                return reject(err);
-            }
-            client?.on('data', (data: any) => {
-                resolve(data.toString('ascii')); // Convert response buffer to ASCII string
-            });
-        });
-    });
-}
-
-// Send commands to IV4
-export function sendIV4Command(command: string, event: any) {
-    return new Promise((resolve, reject) => {
-        if (!client || client.destroyed) {
-            reject('No active TCP connection');
-            return;
-        }
-
-        // console.log(`Sending command to IV4: ${command}`);
-        client.write(command + '\r\n', 'utf-8', (err) => {
-            if (err) {
-                reject(`Error sending command: ${err.message}`);
-            } else {
-                resolve('Command sent successfully');
-            }
-        });
-    });
-}
-
-// Request OCR detailed output (OF,01)
-export async function setOCRDetailedOutput(event: any) {
-    try {
-        const response = await sendIV4Command("OF,01", event);
-        return console.log(`Detailed OCR Output Set: ${response}`);
-    } catch (error) {
-        return console.error(error);
-    }
-}
-
-// Request OCR data (RT)
-export async function requestOCRData(event: any) {
-    try {
-        const response: any = await sendIV4Command("RT", event);
-
-        return;
-    } catch (error) {
-        return console.error(error);
-    }
-}
+//         client?.write(command, 'ascii', (err: any) => {
+//             if (err) {
+//                 return reject(err);
+//             }
+//             client?.on('data', (data: any) => {
+//                 resolve(data.toString('ascii')); // Convert response buffer to ASCII string
+//             });
+//         });
+//     });
+// }

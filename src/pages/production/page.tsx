@@ -113,60 +113,97 @@ export default function ProductionPage() {
       const newUrl = new Date().toLocaleTimeString()
 
       setCapturedData((prevData) => {
-        if (prevData.length > 0) {
-          const lastEntry = prevData[prevData.length - 1]
-          const match = lastEntry.serial.match(/^([A-Za-z]+)(\d+)$/)
+        const newUrl = new Date().toLocaleTimeString();
 
+        if (prevData.length === 0) {
+          // First entry case
+          const match = serial.match(/^([A-Za-z]+)(\d+)$/)
           if (match) {
             const prefix = match[1]
-            const lastSerialNum = Number.parseInt(match[2], 10)
+            const currentSerialNum = Number.parseInt(match[2], 10)
             const numLength = match[2].length
 
-            const currentMatch = serial.match(/^([A-Za-z]+)(\d+)$/)
-            if (currentMatch) {
-              const currentPrefix = currentMatch[1]
-              const currentSerialNum = Number.parseInt(currentMatch[2], 10)
+            const matchedRoll = labelRolls.find(info => {
+              const startMatch = info.startNumber.match(/^([A-Za-z]+)(\d+)$/)
+              return startMatch?.[1] === prefix
+            })
 
-              // 🛑 Find matching rollInfo by prefix
-              const matchedRoll = labelRolls.find(info => {
-                const startPrefix = info.startNumber.match(/^([A-Za-z]+)/)?.[1]
-                return startPrefix === currentPrefix
-              })
+            if (matchedRoll) {
+              const startMatch = matchedRoll.startNumber.match(/^([A-Za-z]+)(\d+)$/)
+              if (startMatch) {
+                const startSerialNum = Number.parseInt(startMatch[2], 10)
 
-              if (matchedRoll) {
-                const endMatch = matchedRoll.endNumber.match(/^([A-Za-z]+)(\d+)$/)
-                if (endMatch) {
-                  const endSerialNum = Number.parseInt(endMatch[2], 10)
-
-                  // 🔥 Check OOR
-                  if (currentSerialNum > endSerialNum) {
-                    // setMissingData((prevMissing) => [
-                    //   ...prevMissing,
-                    //   { serial, url: newUrl, status: "OOR" },
-                    // ])
-                  }
-                  // 🔥 Normal missing
-                  else if (currentSerialNum > lastSerialNum + 1) {
-                    window.serial.serial_com_send("@0101\r");
-                    for (let i = lastSerialNum + 1; i < currentSerialNum; i++) {
-                      const skippedSerial = `${prefix}${String(i).padStart(numLength, "0")}`
-                      setMissingData((prevMissing) => [
-                        ...prevMissing,
-                        { serial: skippedSerial, url: newUrl, status: "MISSING" },
-                      ])
-                    }
+                if (currentSerialNum > startSerialNum) {
+                  window.serial.serial_com_send("@0101\r")
+                  setTimeout(() => {
+                    window.serial.serial_com_send("@0100\r")
+                  }, 200)
+                  // Skipped entries before first received serial
+                  for (let i = startSerialNum; i < currentSerialNum; i++) {
+                    const skippedSerial = `${prefix}${String(i).padStart(numLength, "0")}`
+                    setMissingData((prevMissing) => [
+                      ...prevMissing,
+                      { serial: skippedSerial, url: newUrl, status: "MISSING" },
+                    ])
                   }
                 }
-              } else {
-                // 🛑 If no matching roll found, you can optionally handle it here
-                console.warn('No matching rollInfo for serial prefix:', currentPrefix)
               }
+            }
+          }
+
+          return prevData
+        }
+
+        // Rest of your code (already provided)
+        const lastEntry = prevData[prevData.length - 1]
+        const match = lastEntry.serial.match(/^([A-Za-z]+)(\d+)$/)
+
+        if (match) {
+          const prefix = match[1]
+          const lastSerialNum = Number.parseInt(match[2], 10)
+          const numLength = match[2].length
+
+          const currentMatch = serial.match(/^([A-Za-z]+)(\d+)$/)
+          if (currentMatch) {
+            const currentPrefix = currentMatch[1]
+            const currentSerialNum = Number.parseInt(currentMatch[2], 10)
+
+            const matchedRoll = labelRolls.find(info => {
+              const startPrefix = info.startNumber.match(/^([A-Za-z]+)/)?.[1]
+              return startPrefix === currentPrefix
+            })
+
+            if (matchedRoll) {
+              const endMatch = matchedRoll.endNumber.match(/^([A-Za-z]+)(\d+)$/)
+              if (endMatch) {
+                const endSerialNum = Number.parseInt(endMatch[2], 10)
+
+                if (currentSerialNum > endSerialNum) {
+                  // OOR - Out of Range
+                } else if (currentSerialNum > lastSerialNum + 1) {
+                  window.serial.serial_com_send("@0101\r")
+                  setTimeout(() => {
+                    window.serial.serial_com_send("@0100\r")
+                  }, 200)
+
+                  for (let i = lastSerialNum + 1; i < currentSerialNum; i++) {
+                    const skippedSerial = `${prefix}${String(i).padStart(numLength, "0")}`
+                    setMissingData((prevMissing) => [
+                      ...prevMissing,
+                      { serial: skippedSerial, url: newUrl, status: "MISSING" },
+                    ])
+                  }
+                }
+              }
+            } else {
+              console.warn('No matching rollInfo for serial prefix:', currentPrefix)
             }
           }
         }
 
         return prevData
       })
+
 
       if (!status) {
         setMissingData((prevMissing) => [...prevMissing, { serial, url: "", status: "(UNKNOWN)" }])
@@ -205,6 +242,11 @@ export default function ProductionPage() {
       })
 
       if (!isValidSerial) {
+        window.serial.serial_com_send("@0101\r");
+
+        setTimeout(() => {
+          window.serial.serial_com_send("@0100\r");
+        }, 200);
         const newEntry = { serial, url: newUrl, status: status + " - (INVALID)" }
 
         setMissingData((prevMissing) => {
@@ -233,7 +275,12 @@ export default function ProductionPage() {
           return prevDuplicates
         })
 
-        window.serial.serial_com_send("@0101\r")
+        window.serial.serial_com_send("@0101\r");
+
+        setTimeout(() => {
+          window.serial.serial_com_send("@0100\r");
+        }, 200);
+
         return
       } else if (alreadyCaptured && !checkDuplicates) {
         return

@@ -4,7 +4,7 @@ import {
   DISK_GET
 } from "./disk-channels";
 import { WIN_DIALOG_INFO } from "../window/window-channels";
-import { fetchOne } from "sqlite-electron";
+import { fetchOne } from "../../db_helpers";
 const checkDiskSpace = require('check-disk-space').default
 
 export function addDiskEventListeners() {
@@ -22,8 +22,8 @@ export function addDiskEventListeners() {
     try {
       const result = await checkDiskSpace(path);
       let data: any = await fetchOne("SELECT * FROM storage_treshold ORDER BY id DESC LIMIT 1");
-      
-      let threshold = 80/100
+
+      let threshold = 80 / 100
       if (data) {
         threshold = parseInt(data.treshold) / 100
       }

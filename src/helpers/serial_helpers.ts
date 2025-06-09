@@ -1,13 +1,8 @@
-import { TCP_RECEIVE } from "./ipc/tcp/tcp-channels";
-import { requestOCRData } from "./tcp_helpers";
-
-const { SerialPort } = require("serialport");
+import { SerialPort } from "serialport";
 
 let serial: any = null;
-let currentPortPath: string = '';
-let heartbeatInterval: NodeJS.Timeout | null = null;
 
-export async function openSerialPort(port: string, event: any): Promise<string> {
+export async function openSerialPort(port: string): Promise<string> {
     return new Promise(async (resolve, reject) => {
         // If a serial port is already open, close it first
         if (serial && serial.isOpen) {
@@ -20,91 +15,33 @@ export async function openSerialPort(port: string, event: any): Promise<string> 
             }
         }
 
-        currentPortPath = port;
-        serial = new SerialPort({ path: port, baudRate: 9600 });
+        // Now open the new serial port
+        serial = new SerialPort({ path: port, baudRate: 9600 }, (err: any) => {
+            if (err) {
+                console.error("Failed to open serial port:", err.message);
+                reject(`Connection error: ${err.message}`);
+                return;
+            }
 
-        serial.on("error", (err: Error) => {
-            console.error("Error: ", err.message);
-            reject(`Connection error: ${err.message}`);
-        });
-
-        serial.on("open", () => {
-            console.log(`Connected to serial port: ${port}`);
-            attachSerialListeners(event);
-            startHeartbeat(event);
-            pollDCON(event);
+            console.log("Connected to serial port:", port);
             resolve('Connected successfully');
         });
-    });
-}
 
-function pollDCON(event: any) {
-    if (!serial || !serial.isOpen) return;
-
-    serial.write('@01\r\n', (err: any) => {
-        if (err) {
-            console.error('Error writing @01:', err.message);
-            return;
-        }
-
-        serial.once('data', (data: any) => {
-            const response = data.toString('ascii');
-            if (response.includes('1')) {
-                requestOCRData(event);
-            }
-            pollDCON(event); // Recursive polling
+        // Catch any runtime errors on the port
+        serial.on("error", (error: any) => {
+            reject(`Connection error: ${error.message}`);
         });
     });
-}
-
-function sendDconCommand(command: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-        if (!serial || !serial.isOpen) {
-            return reject(new Error("Serial port is not open."));
-        }
-
-        serial.write(command, 'ascii', (err: any) => {
-            if (err) return reject(err);
-
-            serial.once('data', (data: Buffer) => {
-                resolve(data.toString('ascii'));
-            });
-        });
-    });
-}
-
-export function sendSerialData(cmd: string) {
-    console.log("Sending:", cmd);
-
-    if (!serial || !serial.isOpen) {
-        console.error("Serial port is not open.");
-        return;
-    }
-
-    sendDconCommand(cmd)
-        .then((response) => {
-            if (cmd !== '@0100\r') {
-                setTimeout(() => {
-                    sendSerialData('@0100\r');
-                }, 1500);
-            }
-            console.log('Response:', response);
-        })
-        .catch((err) => {
-            console.error('Error:', err);
-        });
 }
 
 export async function closeSerialPort() {
     return new Promise((resolve, reject) => {
         if (serial) {
-            stopHeartbeat();
             serial.close((err: any) => {
                 if (err) {
                     reject(`Error closing serial port: ${err.message}`);
                 } else {
                     console.log("Serial port closed");
-                    serial = null;
                     resolve('Disconnected successfully');
                 }
             });
@@ -115,63 +52,46 @@ export async function closeSerialPort() {
 }
 
 export async function listSerialPorts() {
-    return SerialPort.list();
-}
-
-function startHeartbeat(event: any) {
-    if (heartbeatInterval) return;
-
-    heartbeatInterval = setInterval(() => {
-        if (serial && serial.isOpen) {
-            sendDconCommand('@01\r\n')
-                .then(response => {
-                    console.log('Heartbeat:', response.trim());
-                })
-                .catch(err => {
-                    console.error('Heartbeat error:', err.message);
-                    attemptReconnect(event);
-                });
-        }
-    }, 5000);
-}
-
-function stopHeartbeat() {
-    if (heartbeatInterval) {
-        clearInterval(heartbeatInterval);
-        heartbeatInterval = null;
-    }
-}
-
-function attachSerialListeners(event: any) {
-    if (!serial) return;
-
-    serial.on('close', () => {
-        console.warn('Serial port closed unexpectedly.');
-        stopHeartbeat();
-        attemptReconnect(event);
-    });
-
-    serial.on('error', (err: any) => {
-        console.error('Serial port error:', err.message);
-        stopHeartbeat();
-        attemptReconnect(event);
+    return new Promise((resolve, reject) => {
+        SerialPort.list().then(
+            (ports: any[]) => resolve(ports),
+            (err: any) => reject(err)
+        );
     });
 }
 
-function attemptReconnect(event: any) {
-    if (!currentPortPath) {
-        console.warn("No port path saved; cannot reconnect.");
-        return;
-    }
+export function sendSerialData(cmd: string) {
+    //0 = RESET
+    //1 = DO0
+    //2 = DO1
+    //3 = DO0 & DO1
+    //4 = DO2
+    //5 = DO0 & DO2
+    //6 = DO1 & DO2
+    //7 = DO0 & DO1 & DO2
+    //8 = DO3
+    //9 = DO0 & DO3
+    //10 = DO4
+    // console.log(cmd)
+    sendDconCommand(cmd)
+}
 
-    console.log('Attempting to reconnect in 5 seconds...');
-    setTimeout(async () => {
-        try {
-            await openSerialPort(currentPortPath, event);
-            console.log('Reconnected to serial port.');
-        } catch (err) {
-            console.error('Reconnect failed:', err);
-            attemptReconnect(event); // Keep retrying
-        }
-    }, 5000);
+function sendDconCommand(command: string) {
+    return new Promise((resolve, reject) => {
+        // write to dcon rs485
+        console.log(command)
+        serial?.write(command, 'ascii', (err: any) => {
+            if (err) {
+                return reject(err);
+            }
+            // if (command !== '@0100\r') {
+            //     setTimeout(() => {
+            //         sendSerialData('@0100\r')
+            //     }, 1500)
+            // }
+            serial?.once('data', (data: any) => {
+                resolve(data.toString('ascii')); // Convert response buffer to ASCII string
+            });
+        });
+    });
 }
