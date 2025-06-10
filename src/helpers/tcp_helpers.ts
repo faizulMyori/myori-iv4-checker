@@ -50,8 +50,8 @@ export async function connectTcp(ip: string, port: number, event: any) {
             client?.removeAllListeners(); // Remove all previous listeners
             setInterval(keepAlive, 10000); // Send keep-alive packets every 30 seconds
             sendSerialData('@0100\r')
-            client?.write('OE,1<CR>')
-            client?.write('OF,01<CR>')
+            client?.write('OE,1\r')
+            client?.write('OF,01\r')
             // Listen for incoming data
             client?.on('data', (data: Buffer) => {
                 try {
