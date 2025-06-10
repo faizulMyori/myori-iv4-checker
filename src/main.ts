@@ -8,8 +8,29 @@ import {
 import {
   initializeDatabase,
 } from "./helpers/db_helpers";
+import { initializeLicenseValidationTable, checkMachineLicense } from "./helpers/license_helpers";
 import { closeSerialPort } from "./helpers/serial_helpers";
 import { autoUpdater } from "electron-updater";
+import dotenv from "dotenv";
+import fs from "fs";
+
+// Load environment variables from .env file
+// In production, the .env file is in the extraResources directory
+if (process.env.NODE_ENV === "production") {
+  const extraResourcesPath = process.resourcesPath ? path.join(process.resourcesPath, ".env") : null;
+  
+  if (extraResourcesPath && fs.existsSync(extraResourcesPath)) {
+    dotenv.config({ path: extraResourcesPath });
+    console.log("Loaded .env from extraResources:", extraResourcesPath);
+  } else {
+    console.warn("No .env file found in extraResources");
+    dotenv.config(); // Try default location as fallback
+  }
+} else {
+  // Development mode - use default .env location
+  dotenv.config();
+  console.log("Loaded .env from development location");
+}
 
 
 const logFilePath = path.join(app.getPath('userData'), 'logs', 'app.log');
@@ -231,7 +252,7 @@ function createWindow() {
           mainWindow.close()
           app.quit()
         }
-        
+
       }
     })
 
@@ -245,12 +266,12 @@ function createWindow() {
       console.log('Loading in production mode');
       console.log('__dirname:', __dirname);
       console.log('app.getAppPath():', app.getAppPath());
-      
+
       // Use a simple path relative to the main.js location
       // Since main.js is in .vite/build/ and renderer is in .vite/renderer/
       const rendererPath = path.join(__dirname, '../renderer/main_window/index.html');
       console.log('Loading renderer from:', rendererPath);
-      
+
       mainWindow.loadFile(rendererPath);
     }
 
@@ -272,6 +293,24 @@ app.whenReady()
     const mainWindow = createWindow();
     installExtensions();
     initializeDatabase();
+    // Initialize license validation table
+    initializeLicenseValidationTable();
+
+    // Check for license validation
+    const licenseStatus = checkMachineLicense();
+    console.log(licenseStatus)
+    if (!licenseStatus.valid && !inDevelopment && mainWindow) {
+      // Show license activation dialog
+      dialog.showMessageBox(mainWindow, {
+        type: 'warning',
+        title: 'License Activation Required',
+        message: 'This application requires activation.',
+        detail: licenseStatus.error || 'Please contact your administrator to obtain a license key.',
+        buttons: ['OK'],
+        defaultId: 0
+      });
+    }
+
     // Check for updates after the app is ready and window is created
     checkForUpdates();
   });

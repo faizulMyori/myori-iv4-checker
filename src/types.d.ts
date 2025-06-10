@@ -130,6 +130,13 @@ interface disk {
   disk_check_space: (path: any) => Promise<void>;
 }
 
+interface license {
+  getMachineId: () => Promise<string>;
+  validateLicenseKey: (licenseKey: string) => Promise<{ valid: boolean; error?: string; expiryDate?: string; }>;
+  saveLicenseValidation: (licenseKey: string, isValid: boolean, expiryDate?: string) => Promise<void>;
+  checkMachineLicense: () => Promise<{ valid: boolean; error?: string; expiryDate?: string; }>;
+}
+
 declare interface Window {
   themeMode: ThemeModeContext;
   electronWindow: ElectronWindow;
@@ -138,4 +145,11 @@ declare interface Window {
   excel: excel;
   serial: serial;
   disk: disk;
+  license: license;
+  electron: {
+    ipcRenderer: {
+      on: (channel: string, callback: (event: any, ...args: any[]) => void) => void;
+      send: (channel: string, ...args: any[]) => void;
+    };
+  };
 }

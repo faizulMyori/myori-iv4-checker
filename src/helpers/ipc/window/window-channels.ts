@@ -11,3 +11,4 @@ export const WINDOW_SELECT_DIRECTORY = "window:selectDirectory";
 export const WINDOW_CHECK_FILE_EXISTS = "window:checkFileExists";
 export const WINDOW_OPEN_FILE_LOCATION = "window:openFileLocation";
 export const WIN_TOAST = 'win-toast';
+export const APP_RELOAD = "app:reload";

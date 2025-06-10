@@ -1,7 +1,7 @@
 {
   "name": "myori-iv4-checker",
   "productName": "myori-iv4-checker",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "myori-iv4-checker",
   "main": ".vite/build/main.js",
   "build": {

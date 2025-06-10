@@ -6,7 +6,8 @@ import {
   WINDOW_SELECT_DIRECTORY,
   WINDOW_CHECK_FILE_EXISTS,
   WINDOW_OPEN_FILE_LOCATION,
-  WIN_TOAST
+  WIN_TOAST,
+  APP_RELOAD
 } from "./window-channels";
 
 export function exposeWindowContext() {
@@ -18,6 +19,9 @@ export function exposeWindowContext() {
       on: (channel: string, callback: (event: any, ...args: any[]) => void) => {
         console.log('Setting up IPC listener for channel:', channel);
         ipcRenderer.on(channel, callback);
+      },
+      send: (channel: string, ...args: any[]) => {
+        ipcRenderer.send(channel, ...args);
       }
     }
   });

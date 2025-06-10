@@ -9,16 +9,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { Toaster, toast } from "sonner"
 import { WIN_TOAST } from "./helpers/ipc/window/window-channels";
 import { useProductionState } from "./pages/production/hooks/use-production-state";
-
-declare global {
-  interface Window {
-    electron: {
-      ipcRenderer: {
-        on: (channel: string, callback: (event: any, ...args: any[]) => void) => void;
-      };
-    };
-  }
-}
+import LicenseActivationDialog from "./components/LicenseActivationDialog";
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -46,6 +37,7 @@ export default function App() {
   const [conn, setConn] = useState("failed");
   const [route, setRoute] = useState("");
   const [prodStatus, setProdStatus] = useState("stopped");
+  const [showLicenseDialog, setShowLicenseDialog] = useState(false);
 
   const { i18n } = useTranslation();
 
@@ -57,6 +49,18 @@ export default function App() {
       toast[type](title, { description });
     };
     window.electron.ipcRenderer.on('win-toast', handleToast);
+
+    // Check if license activation is needed
+    if (window.license) {
+      window.license.checkMachineLicense().then((status: any) => {
+        if (!status.valid) {
+          setShowLicenseDialog(true);
+        }
+      }).catch((error: any) => {
+        console.error('Error checking license:', error);
+      });
+    }
+
     return () => {
       window.electron.ipcRenderer.on('win-toast', handleToast);
     };
@@ -112,6 +116,7 @@ export default function App() {
   return (
     <UserContext.Provider value={{ user, setUser, conn, setConn, route, setRoute, prodStatus, setProdStatus } as UserContextType}>
       <RouterProvider router={router} />
+      <LicenseActivationDialog open={showLicenseDialog} onOpenChange={setShowLicenseDialog} />
     </UserContext.Provider>
   );
 }

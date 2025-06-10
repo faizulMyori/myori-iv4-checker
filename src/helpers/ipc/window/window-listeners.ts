@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain, dialog, shell } from "electron";
+import { BrowserWindow, ipcMain, dialog, shell, app } from "electron";
 import {
   WIN_CLOSE_CHANNEL,
   WIN_DIALOG_INFO,
@@ -12,7 +12,8 @@ import {
   WINDOW_CLOSE,
   WINDOW_INFO,
   WINDOW_SELECT_DIRECTORY,
-  WIN_TOAST
+  WIN_TOAST,
+  APP_RELOAD
 } from "./window-channels";
 import fs from 'fs';
 import path from 'path';
@@ -132,5 +133,12 @@ export function addWindowEventListeners(mainWindow: BrowserWindow) {
     } else {
       console.error('Main window not available for sending toast');
     }
+  });
+
+  // Handle app reload after license activation
+  ipcMain.on(APP_RELOAD, () => {
+    console.log('Reloading application after license activation');
+    app.relaunch();
+    app.exit(0);
   });
 }
