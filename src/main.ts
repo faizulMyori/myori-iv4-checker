@@ -188,12 +188,12 @@ autoUpdater.on('error', (err) => {
 
   const mainWindow = BrowserWindow.getFocusedWindow();
   if (mainWindow) {
-    dialog.showMessageBox(mainWindow, {
-      type: 'error',
-      title: 'Update Error',
-      message: 'An error occurred while updating the application.',
-      detail: err.message
-    });
+    // dialog.showMessageBox(mainWindow, {
+    //   type: 'error',
+    //   title: 'Update Error',
+    //   message: 'An error occurred while updating the application.',
+    //   detail: err.message
+    // });
   }
 });
 
