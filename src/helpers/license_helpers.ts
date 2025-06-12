@@ -1,6 +1,9 @@
 import crypto from 'crypto';
 import os from 'os';
 import { fetchOne, executeQuery } from './db_helpers';
+import fs from 'fs';
+import path from 'path';
+import { app } from 'electron';
 
 // Get secret key from environment variable
 const SECRET_KEY = '97265568622298913307852632289451';
@@ -11,46 +14,55 @@ if (process.env.NODE_ENV === 'production' && SECRET_KEY === '9726556862229891330
 }
 
 // Get unique machine identifier based on hardware information
-export function getMachineId(): string {
+export async function getMachineId(): Promise<string> {
   try {
-    // Collect hardware identifiers
-    const cpus = os.cpus();
-    const networkInterfaces = os.networkInterfaces();
-    const hostname = os.hostname();
+    // Use systeminformation to get the system UUID
+    const si = require('systeminformation');
 
-    // Create a string with hardware information
-    let hardwareStr = hostname;
+    try {
+      // Get the system UUID asynchronously
+      const systemInfo = await si.system();
+      const uuid = systemInfo.uuid;
 
-    // Add CPU information
-    if (cpus && cpus.length > 0) {
-      hardwareStr += cpus[0].model;
-    }
-
-    // Add MAC address (if available)
-    const macs: string[] = [];
-    Object.keys(networkInterfaces).forEach(interfaceName => {
-      const interfaces = networkInterfaces[interfaceName];
-      if (interfaces) {
-        interfaces.forEach(iface => {
-          if (!iface.internal && iface.mac && iface.mac !== '00:00:00:00:00:00') {
-            macs.push(iface.mac);
-          }
-        });
+      if (uuid && uuid !== '' && uuid !== '03000200-0400-0500-0006-000700080009' && uuid !== 'Default string') {
+        // Create a hash of the UUID
+        return crypto.createHash('sha256').update(uuid).digest('hex');
+      } else {
+        // Fallback to hostname if UUID is empty or default
+        return crypto.createHash('sha256').update(os.hostname()).digest('hex');
       }
-    });
-
-    if (macs.length > 0) {
-      // Sort to ensure consistent order
-      macs.sort();
-      hardwareStr += macs.join('');
+    } catch (siError) {
+      console.error('Error getting system UUID:', siError);
+      // Fallback to hostname if UUID retrieval fails
+      return crypto.createHash('sha256').update(os.hostname()).digest('hex');
     }
-
-    // Create a hash of the hardware string
-    const hash = crypto.createHash('sha256').update(hardwareStr).digest('hex');
-    return hash;
   } catch (error) {
     console.error('Error generating machine ID:', error);
     // Fallback to a less reliable but still usable identifier
+    return crypto.createHash('sha256').update(os.hostname()).digest('hex');
+  }
+}
+
+// Synchronous wrapper for backward compatibility
+export function getMachineIdSync(): string {
+  // Use a synchronous method as fallback
+  try {
+    // Try to use a more reliable identifier like disk serial or motherboard serial
+    const execSync = require('child_process').execSync;
+    try {
+      // Try to get system UUID using WMI on Windows
+      const uuid = execSync('powershell -Command "Get-CimInstance -ClassName Win32_ComputerSystemProduct | Select-Object -ExpandProperty UUID"', { encoding: 'utf8' }).trim();
+      if (uuid && uuid !== '' && uuid !== '03000200-0400-0500-0006-000700080009' && uuid !== 'Default string') {
+        return crypto.createHash('sha256').update(uuid).digest('hex');
+      }
+    } catch (execError) {
+      console.error('Error executing system command:', execError);
+    }
+
+    // Fallback to hostname
+    return crypto.createHash('sha256').update(os.hostname()).digest('hex');
+  } catch (error) {
+    console.error('Error generating machine ID synchronously:', error);
     return crypto.createHash('sha256').update(os.hostname()).digest('hex');
   }
 }
@@ -104,7 +116,7 @@ export function validateLicenseKey(licenseKey: string): { valid: boolean; expiry
     const licenseData = JSON.parse(decrypted);
 
     // Check if the license is for this machine
-    const currentMachineId = getMachineId();
+    const currentMachineId = getMachineIdSync();
     if (licenseData.machineId !== currentMachineId) {
       return { valid: false, error: 'License key is not valid for this machine' };
     }
@@ -125,82 +137,175 @@ export function validateLicenseKey(licenseKey: string): { valid: boolean; expiry
   }
 }
 
-// Initialize the license validation table
-export function initializeLicenseValidationTable() {
-  const sql = `
-    CREATE TABLE IF NOT EXISTS license_validation (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      machine_id TEXT NOT NULL,
-      license_key TEXT NOT NULL,
-      is_valid INTEGER NOT NULL DEFAULT 0,
-      expiry_date TEXT,
-      last_checked TEXT NOT NULL,
-      created_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `;
-  executeQuery(sql);
+// Initialize the license directory
+export function initializeLicenseStorage() {
+  try {
+    // Create the license directory if it doesn't exist
+    const licenseDir = getLicenseDirectory();
+    console.log(`License directory initialized at: ${licenseDir}`);
+    return true;
+  } catch (error) {
+    console.error('Error initializing license storage:', error);
+    return false;
+  }
 }
 
-// Save license validation result to database
+// Get the application data directory for storing license files
+function getLicenseDirectory(): string {
+  // In renderer process, we need to use remote to access app
+  let appDataPath;
+  try {
+    // Try to get app data path directly (main process)
+    appDataPath = app.getPath('userData');
+  } catch (error) {
+    // Fallback for renderer process or if app is not available
+    appDataPath = process.env.APPDATA ||
+      (process.platform === 'darwin' ?
+        path.join(process.env.HOME || '', 'Library', 'Application Support') :
+        path.join(process.env.HOME || '', '.config'));
+    appDataPath = path.join(appDataPath, 'myori-iv4-checker');
+  }
+
+  // Create the directory if it doesn't exist
+  const licenseDir = path.join(appDataPath, 'licenses');
+  if (!fs.existsSync(licenseDir)) {
+    fs.mkdirSync(licenseDir, { recursive: true });
+  }
+
+  return licenseDir;
+}
+
+// Save license validation result to file
+// Save license validation result to file
 export function saveLicenseValidation(licenseKey: string, isValid: boolean, expiryDate?: Date) {
-  const machineId = getMachineId();
+  const machineId = getMachineIdSync();
   const lastChecked = new Date().toISOString();
 
-  // Check if a record already exists for this machine
-  const existingRecord = fetchOne(
-    "SELECT * FROM license_validation WHERE machine_id = ?",
-    [machineId]
-  );
+  // Create license data object
+  const licenseData = {
+    machineId,
+    licenseKey,
+    isValid,
+    expiryDate: expiryDate?.toISOString(),
+    lastChecked,
+    createdAt: new Date().toISOString()
+  };
 
-  if (existingRecord) {
-    // Update existing record
-    executeQuery(
-      "UPDATE license_validation SET license_key = ?, is_valid = ?, expiry_date = ?, last_checked = ? WHERE machine_id = ?",
-      [licenseKey, isValid ? 1 : 0, expiryDate?.toISOString(), lastChecked, machineId]
-    );
-  } else {
-    // Insert new record
-    executeQuery(
-      "INSERT INTO license_validation (machine_id, license_key, is_valid, expiry_date, last_checked) VALUES (?, ?, ?, ?, ?)",
-      [machineId, licenseKey, isValid ? 1 : 0, expiryDate?.toISOString(), lastChecked]
-    );
+  // Get the license file path
+  const licenseDir = getLicenseDirectory();
+  const licenseFilePath = path.join(licenseDir, `${machineId}.myori`);
+
+  try {
+    // Convert license data to JSON string
+    const licenseDataStr = JSON.stringify(licenseData, null, 2);
+
+    // Encrypt the license data
+    // Generate a random initialization vector
+    const iv = crypto.randomBytes(16);
+    // Create key buffer from the secret key
+    const key = crypto.scryptSync(SECRET_KEY, 'salt', 32);
+    // Create cipher with key and iv
+    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+    // Encrypt the license data
+    let encrypted = cipher.update(licenseDataStr, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+
+    // Combine IV and encrypted data
+    const ivHex = iv.toString('hex');
+    const encryptedWithIV = `${ivHex}:${encrypted}`;
+
+    // Generate checksum for integrity verification
+    const checksum = crypto.createHash('md5').update(encryptedWithIV).digest('hex').substring(0, 8);
+
+    // Final encrypted data with checksum
+    const encryptedData = `${encryptedWithIV}${checksum}`;
+
+    // Write the encrypted license data to file
+    fs.writeFileSync(licenseFilePath, encryptedData);
+    console.log(`Encrypted license data saved to ${licenseFilePath}`);
+  } catch (error) {
+    console.error('Error saving license data to file:', error);
   }
 }
 
 // Check if the current machine has a valid license
 export function checkMachineLicense(): { valid: boolean; expiryDate?: Date; error?: string } {
   try {
-    const machineId = getMachineId();
+    const machineId = getMachineIdSync();
 
-    // Get the license record for this machine
-    const licenseRecord: any = fetchOne(
-      "SELECT * FROM license_validation WHERE machine_id = ?",
-      [machineId]
-    );
+    // Get the license file path
+    const licenseDir = getLicenseDirectory();
+    const licenseFilePath = path.join(licenseDir, `${machineId}.myori`);
 
-    if (!licenseRecord) {
+    // Check if license file exists
+    if (!fs.existsSync(licenseFilePath)) {
       return { valid: false, error: 'No license found for this machine' };
     }
 
-    if (!licenseRecord.is_valid) {
-      return { valid: false, error: 'License is not valid' };
-    }
+    try {
+      // Read the encrypted license data
+      const encryptedData = fs.readFileSync(licenseFilePath, 'utf8');
 
-    // Check expiry date if present
-    if (licenseRecord.expiry_date) {
-      const expiryDate = new Date(licenseRecord.expiry_date);
-      if (expiryDate < new Date()) {
-        // Update the record to mark as invalid
-        executeQuery(
-          "UPDATE license_validation SET is_valid = 0 WHERE machine_id = ?",
-          [machineId]
-        );
-        return { valid: false, expiryDate, error: 'License has expired' };
+      // Extract the checksum (last 8 characters)
+      const checksum = encryptedData.slice(-8);
+      const encryptedWithIV = encryptedData.slice(0, -8);
+
+      // Verify checksum
+      const calculatedChecksum = crypto.createHash('md5').update(encryptedWithIV).digest('hex').substring(0, 8);
+      if (checksum !== calculatedChecksum) {
+        return { valid: false, error: 'License file integrity check failed' };
       }
-      return { valid: true, expiryDate };
-    }
 
-    return { valid: true };
+      // Split the IV and encrypted data
+      const [ivHex, encryptedLicense] = encryptedWithIV.split(':');
+      if (!ivHex || !encryptedLicense) {
+        return { valid: false, error: 'Invalid license file format' };
+      }
+
+      // Convert IV from hex to buffer
+      const iv = Buffer.from(ivHex, 'hex');
+
+      // Create key buffer from the secret key
+      const key = crypto.scryptSync(SECRET_KEY, 'salt', 32);
+
+      // Decrypt the license data
+      const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+      let decrypted;
+      try {
+        decrypted = decipher.update(encryptedLicense, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+      } catch (decryptError) {
+        console.error('Error decrypting license file:', decryptError);
+        return { valid: false, error: 'License file decryption failed' };
+      }
+
+      // Parse the license data
+      const licenseData = JSON.parse(decrypted);
+
+      if (!licenseData.isValid) {
+        return { valid: false, error: 'License is not valid' };
+      }
+
+      // Check expiry date if present
+      if (licenseData.expiryDate) {
+        const expiryDate = new Date(licenseData.expiryDate);
+        if (expiryDate < new Date()) {
+          // Update the file to mark license as invalid
+          licenseData.isValid = false;
+
+          // Re-encrypt and save the updated license data
+          saveLicenseValidation(licenseData.licenseKey, false, expiryDate);
+
+          return { valid: false, expiryDate, error: 'License has expired' };
+        }
+        return { valid: true, expiryDate };
+      }
+
+      return { valid: true };
+    } catch (parseError) {
+      console.error('Error processing license file:', parseError);
+      return { valid: false, error: 'Invalid license file format' };
+    }
   } catch (error) {
     console.error('Error checking machine license:', error);
     return { valid: false, error: 'Error checking license' };

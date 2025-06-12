@@ -8,7 +8,7 @@ import {
 import {
   initializeDatabase,
 } from "./helpers/db_helpers";
-import { initializeLicenseValidationTable, checkMachineLicense } from "./helpers/license_helpers";
+import { initializeLicenseStorage, checkMachineLicense } from "./helpers/license_helpers";
 import { closeSerialPort } from "./helpers/serial_helpers";
 import { autoUpdater } from "electron-updater";
 import dotenv from "dotenv";
@@ -18,7 +18,7 @@ import fs from "fs";
 // In production, the .env file is in the extraResources directory
 if (process.env.NODE_ENV === "production") {
   const extraResourcesPath = process.resourcesPath ? path.join(process.resourcesPath, ".env") : null;
-  
+
   if (extraResourcesPath && fs.existsSync(extraResourcesPath)) {
     dotenv.config({ path: extraResourcesPath });
     console.log("Loaded .env from extraResources:", extraResourcesPath);
@@ -293,8 +293,8 @@ app.whenReady()
     const mainWindow = createWindow();
     installExtensions();
     initializeDatabase();
-    // Initialize license validation table
-    initializeLicenseValidationTable();
+    // Initialize license storage directory
+    initializeLicenseStorage();
 
     // Check for license validation
     const licenseStatus = checkMachineLicense();
