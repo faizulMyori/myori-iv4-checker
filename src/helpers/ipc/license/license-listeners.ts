@@ -6,7 +6,7 @@ import {
   LICENSE_CHECK_MACHINE
 } from "./license-channels";
 import {
-  getMachineId,
+  getMachineIdSync,
   validateLicenseKey,
   saveLicenseValidation,
   checkMachineLicense
@@ -16,7 +16,7 @@ export function addLicenseEventListeners() {
   // Get the machine ID
   ipcMain.handle(LICENSE_GET_MACHINE_ID, async () => {
     try {
-      return getMachineId();
+      return getMachineIdSync();
     } catch (error) {
       console.error("Error getting machine ID:", error);
       throw error;
